@@ -1,133 +1,125 @@
-# 🚀 NexusERP - Modern & Scalable Enterprise Resource Planning System
+# 🏢 Enterprise ERP
 
-![Next.js](https://img.shields.io/badge/Next.js-15-black?style=for-the-badge&logo=next.js)
-![React](https://img.shields.io/badge/React-19-blue?style=for-the-badge&logo=react)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=for-the-badge&logo=typescript)
-![Prisma](https://img.shields.io/badge/Prisma-6.0-1B222D?style=for-the-badge&logo=prisma)
-![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4-38B2AC?style=for-the-badge&logo=tailwind-css)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791?style=for-the-badge&logo=postgresql)
+<p align="center">
+  <img src="https://img.shields.io/badge/Next.js-15-black?logo=next.js" alt="Next.js">
+  <img src="https://img.shields.io/badge/TypeScript-5.x-blue?logo=typescript" alt="TypeScript">
+  <img src="https://img.shields.io/badge/Prisma-ORM-2D3748?logo=prisma" alt="Prisma">
+  <img src="https://img.shields.io/badge/BullMQ-Redis-FF4438?logo=redis" alt="BullMQ">
+</p>
 
-NexusERP is a comprehensive, enterprise-grade Next.js application built to handle complex business operations, accounting, inventory, HR, CRM, and B2B integrations with modern tech standards.
+## 📋 Overview
 
-## ✨ Features
+Enterprise ERP is a modern, cloud-native Enterprise Resource Planning system tailored for B2B SaaS operations. Built on a robust Next.js 15 App Router architecture, it delivers real-time business intelligence, automated accounting workflows, and secure multi-tenant data isolation.
 
-- **🛡️ Multi-Tenant Architecture:** Built from the ground up to support multiple organizations in a single deployment.
-- **🔒 Advanced Security:** Field-level encryption for PII/financial data (IBAN, Tax IDs), complete Audit Logging (changes diff tracking), and role-based access control (RBAC).
-- **💼 Accounting & Finance:** Full chart of accounts, bank accounts, cost centers, income/expense tracking, currency exchange, and localized tax handling (KDV, Stopaj, Tevkifat).
-- **📦 Inventory Management:** Suppliers, product catalogs, multi-warehouse stock tracking, low stock alerts, and category management.
-- **🤝 CRM:** Customer tracking, lead scoring, interaction logs (calls, emails, meetings), and customer account management.
-- **👥 HR Module:** Employee management, departments, leave requests, and payroll tracking.
-- **⚡ E-Invoice Integration:** Built-in adapter for Gelir İdaresi Başkanlığı (GIB) SOAP e-invoice web services (Turkey localized).
-- **⚡ Background Jobs:** Redis-powered BullMQ integration for async jobs (e.g., e-invoice processing, bulk emails).
-- **🧪 Tested & Reliable:** High test coverage with Vitest for unit/integration tests and Playwright for E2E tests.
+This platform bridges the gap between modern web experiences and strict enterprise compliance, featuring direct integrations with government tax services and end-to-end data encryption.
 
 ---
 
-## 🛠️ Technology Stack
+## ⚡ Core Capabilities
 
-- **Framework:** Next.js 15 (App Router), React 19
-- **Language:** TypeScript (Strict Mode)
-- **Database:** PostgreSQL with Prisma ORM
-- **UI Components:** Tailwind CSS, Radix UI, Shadcn UI
-- **Authentication:** NextAuth.js (v5 / Auth.js)
-- **Forms & Validation:** React Hook Form + Zod
-- **Testing:** Vitest, Testing Library, Playwright
-- **Tooling:** ESLint, Prettier, Husky (optional)
+- **🔐 Multi-Tenant Architecture:** Cryptographically isolated workspaces using Row-Level Security (RLS) patterns and tenant-specific data partitioning.
+- **💰 Advanced Accounting Engine:** Automated processing for VAT, Withholding Taxes, and complex ledger reconciliations.
+- **🏛️ E-Invoice Integration:** Direct, real-time SOAP integration with the Revenue Administration (GIB) for legal compliance.
+- **📦 Inventory Management:** Real-time stock tracking with asynchronous low-stock alerting via Redis queues.
+- **🛡️ Enterprise Security:** Field-level AES-256 encryption for Personally Identifiable Information (PII) and Role-Based Access Control (RBAC).
+- **⚙️ Background Processing:** Resilient asynchronous task handling powered by BullMQ and Redis for heavy report generation and mass invoicing.
 
 ---
 
-## 🚀 Quick Start (Local Development)
+## 🏗️ Technology Stack
 
-Getting the project up and running is incredibly simple.
+- **Frontend & API:** `Next.js 15` (App Router), `React 19`, `Tailwind CSS`, `Framer Motion`
+- **Backend & ORM:** `Prisma ORM`
+- **Database:** `PostgreSQL` (Relational), `Redis` (Caching & Queues)
+- **Authentication:** `NextAuth.js` (SSO & Credentials)
+- **Queuing System:** `BullMQ`
+- **Validation:** `Zod`
+
+---
+
+## 📂 Architecture Snapshot
+
+```text
+src/
+├── app/                      # Next.js App Router (Pages & API Routes)
+├── components/               # Radix UI & Tailwind-based React components
+├── lib/                      # Core utilities (Prisma Client, Redis, Crypto)
+├── modules/                  # Domain-Driven Design business logic
+│   ├── accounting/           # Ledger and Tax engines
+│   ├── inventory/            # Stock mutations
+│   └── e-invoice/            # GIB SOAP integration
+├── workers/                  # BullMQ processor instances
+└── __tests__/                # Vitest & Playwright testing suites
+```
+
+---
+
+## 🚀 Local Development
 
 ### Prerequisites
 
-- Node.js (v20 or higher)
-- PostgreSQL (v15 or higher)
-- (Optional) Redis (If using background jobs)
+- Node.js `20.x` or higher
+- PostgreSQL `15+`
+- Redis `7+`
 
-### 1. Clone the repository
+### 1. Setup
 
 ```bash
 git clone https://github.com/tahaemree/enterprise-erp.git
 cd enterprise-erp
-```
-
-### 2. Install Dependencies
-
-```bash
 npm install
 ```
 
-### 3. Environment Variables
+### 2. Environment Configuration
 
-Copy the example environment file and configure it.
+Copy the example environment file and configure your local databases.
 
 ```bash
 cp .env.example .env
 ```
 
-Open `.env` and configure:
-- `DATABASE_URL`: Your PostgreSQL connection string.
-- `AUTH_SECRET`: Generate a random string using `openssl rand -base64 32`.
-- `ENCRYPTION_KEY`: Generate exactly 32 bytes using `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`.
-
-### 4. Database Setup & Seed
-
-This single command will generate the Prisma Client, push the schema to the database, and insert rich demo data (currencies, tenants, users, products, etc.).
-
-```bash
-npm run setup
+Ensure the following critical variables are set:
+```ini
+DATABASE_URL="postgresql://user:pass@localhost:5432/erp?schema=public"
+REDIS_URL="redis://localhost:6379"
+NEXTAUTH_SECRET="your-secure-secret"
+ENCRYPTION_KEY="32-byte-base64-key-for-pii"
 ```
 
-### 5. Run the Application
+### 3. Database Migrations
+
+Apply the Prisma schema to your PostgreSQL instance:
+
+```bash
+npx prisma generate
+npx prisma migrate dev
+```
+
+### 4. Start the Application
+
+To boot both the Next.js frontend and the BullMQ worker processes:
 
 ```bash
 npm run dev
 ```
 
-Your app is now running at `http://localhost:3000`.
+---
+
+## 🧪 Testing
+
+The repository maintains high coverage through a dual-testing strategy:
+
+- **Unit/Integration:** Run `npm run test` (Powered by Vitest)
+- **End-to-End (E2E):** Run `npx playwright test` (Verifies critical accounting workflows)
 
 ---
 
-## 🔐 Default Demo Accounts
+## 🤝 Contributing
 
-If you ran `npm run setup`, the database is seeded with demo accounts. 
-
-You can log in at `http://localhost:3000/login` using:
-
-| Role | Email | Password |
-| :--- | :--- | :--- |
-| **Admin** | `admin@deftra.com` | `password123` |
-| **Manager** | `manager@deftra.com` | `password123` |
-| **Viewer** | `viewer@deftra.com` | `password123` |
+We welcome contributions from the enterprise engineering community! Please review our [Contributing Guidelines](CONTRIBUTING.md) to understand our branching strategy, commit conventions, and review processes.
 
 ---
-
-## 🐋 Docker Support
-
-If you prefer using Docker to run the entire stack (App + PostgreSQL + Redis):
-
-```bash
-docker-compose up -d
-```
-*(Make sure to adjust `.env` variables to match the docker network if needed).*
-
----
-
-## 🧪 Running Tests
-
-```bash
-# Run unit and integration tests
-npm run test
-
-# Watch mode for tests
-npm run test:watch
-
-# Run E2E tests with Playwright
-npm run test:e2e
-```
 
 ## 📄 License
 
-This project is open-source and available under the [MIT License](LICENSE).
+This project is licensed under the [MIT License](LICENSE).
