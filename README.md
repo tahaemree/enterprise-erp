@@ -49,8 +49,8 @@ Getting the project up and running is incredibly simple.
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/your-username/deftra.git
-cd deftra
+git clone https://github.com/tahaemree/enterprise-erp.git
+cd enterprise-erp
 ```
 
 ### 2. Install Dependencies
