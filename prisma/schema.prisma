@@ -1,0 +1,1353 @@
+// NexusERP - Enterprise Resource Planning System
+// Prisma Schema with Multi-Tenancy Support
+
+generator client {
+  provider   = "prisma-client-js"
+  engineType = "binary"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==================== CORE ENTITIES ====================
+
+model Tenant {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  logo      String?
+  plan      Plan     @default(FREE)
+  isActive  Boolean  @default(true)
+  apiKey    String?  @unique // Used for API integration (v1)
+  taxId     String?  // VKN/TCKN (e-Belge sender)
+  taxOffice String?  // Vergi dairesi (opsiyonel)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  users         User[]
+  roles         Role[]
+  products      Product[]
+  categories    Category[]
+  customers     Customer[]
+  orders        Order[]
+  employees     Employee[]
+  departments   Department[]
+  leaveRequests LeaveRequest[]
+  suppliers     Supplier[]
+  interactions  Interaction[]
+  transactions  Transaction[]
+  activityLogs  ActivityLog[]
+  auditLogs     AuditLog[]
+  costCenters   CostCenter[]
+  bankAccounts  BankAccount[]
+  checkNotes    CheckPromissoryNote[]
+  eInvoices     EInvoice[]
+  taxTypes      TaxType[]
+  customerAccounts CustomerAccount[]
+  supplierAccounts SupplierAccount[]
+  accountEntries   AccountEntry[]
+  baBsForms     BaBsForm[]
+  currencies    Currency[]
+  exchangeRates CurrencyExchangeRate[]
+  inflationCoefficients InflationCoefficient[]
+  rateLimits    RateLimit[]
+  notifications Notification[]
+
+  @@index([slug])
+  @@index([isActive])
+  @@index([plan])
+  @@index([isActive, plan])
+}
+
+enum Plan {
+  FREE
+  STARTER
+  PROFESSIONAL
+  ENTERPRISE
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String
+  name          String?
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  role          UserRole  @default(USER)
+  permissions   String[]  @default([])
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Multi-tenancy
+  tenantId     String
+  tenant       Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  // Auth.js relations
+  accounts Account[]
+  sessions Session[]
+
+  // Employee relation (if user is also an employee)
+  employee     Employee?
+  activityLogs ActivityLog[]
+  auditLogs    AuditLog[]
+  notifications Notification[]
+
+  // Dynamic RBAC
+  roleId       String?
+  customRole   Role?  @relation(fields: [roleId], references: [id], onDelete: SetNull)
+
+  @@unique([email, tenantId])
+  @@index([tenantId])
+  @@index([email])
+  @@index([role])
+  @@index([roleId])
+  @@index([tenantId, role])
+}
+
+model Role {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  permissions String[] @default([]) // Array of permissions e.g. "inventory:write"
+  isSystem    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Multi-tenancy
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  // Relations
+  users       User[]
+
+  @@unique([name, tenantId])
+  @@index([tenantId])
+}
+
+enum UserRole {
+  ADMIN
+  MANAGER
+  USER
+  VIEWER
+}
+
+// Auth.js models
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@index([identifier])
+  @@index([expires])
+  @@unique([identifier, token])
+}
+
+// ==================== RATE LIMITING (DB-based) ====================
+
+model RateLimit {
+  id        String   @id @default(cuid())
+  key       String   // e.g., "login:admin@example.com" or "api:tenant_abc:127.0.0.1"
+  count     Int      @default(1)
+  windowStart DateTime @default(now())
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Multi-tenancy (optional - some rate limits are per-tenant, some global)
+  tenantId String?
+  tenant   Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([key, windowStart])
+  @@index([key])
+  @@index([expiresAt])
+  @@index([key, windowStart])
+  @@index([tenantId])
+}
+
+// ==================== ACTIVITY LOGGING ====================
+
+model ActivityLog {
+  id          String   @id @default(cuid())
+  action      String
+  entityType  String
+  entityId    String?
+  description String
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Multi-tenancy
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  // Relations
+  userId String?
+  user   User?  @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+  @@index([tenantId, userId])
+  @@index([tenantId, createdAt])
+  @@index([tenantId, entityType, createdAt])
+  @@index([tenantId, entityType, action])
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  action      String   // CREATE, UPDATE, DELETE
+  entity      String   // Tablo/Model adı (örn: Order, AccountEntry)
+  entityId    String   // Etkilenen kaydın ID'si
+  oldData     Json?    // Değişiklik öncesi veri
+  newData     Json?    // Değişiklik sonrası veri
+  ipAddress   String?  // İşlemin yapıldığı IP
+  userAgent   String?  // Tarayıcı/İstemci bilgisi
+  createdAt   DateTime @default(now())
+
+  // Multi-tenancy
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  // Relations
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([entity, entityId])
+  @@index([createdAt])
+}
+
+// ==================== INVENTORY MODULE ====================
+
+model Category {
+  id          String     @id @default(cuid())
+  name        String
+  description String?
+  slug        String
+  color       String?
+  icon        String?
+  parentId    String?
+  parent      Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children    Category[] @relation("CategoryHierarchy")
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  // Soft delete
+  deletedAt DateTime?
+
+  // Multi-tenancy
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  // Relations
+  products Product[]
+
+  @@unique([slug, tenantId])
+  @@index([tenantId])
+  @@index([parentId])
+  @@index([tenantId, name])
+  @@index([tenantId, deletedAt])
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  sku         String
+  barcode     String?
+  price       Decimal  @db.Decimal(10, 2)
+  costPrice   Decimal? @db.Decimal(10, 2)
+  quantity    Decimal  @default(0) @db.Decimal(10, 3)
+  minStock    Decimal  @default(10) @db.Decimal(10, 3)
+  maxStock    Decimal? @db.Decimal(10, 3)
+  unit        String   @default("piece")
+  isActive    Boolean  @default(true)
+  images      String[] @default([])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Soft delete
+  deletedAt DateTime?
+
+  // Multi-tenancy
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  // Relations
+  categoryId String?
+  category   Category?   @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  supplierId String?
+  supplier   Supplier?   @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+  orderItems OrderItem[]
+
+  @@unique([sku, tenantId])
+  @@index([tenantId])
+  @@index([categoryId])
+  @@index([supplierId])
+  @@index([quantity])
+  @@index([tenantId, createdAt])
+  @@index([tenantId, name])
+  @@index([isActive])
+  @@index([tenantId, isActive, quantity])
+  @@index([tenantId, deletedAt])
+}
+
+model Supplier {
+  id           String   @id @default(cuid())
+  name         String
+  contactName  String?
+  email        String?
+  phone        String?
+  address      String?
+  city         String?
+  state        String?
+  country      String?
+  postalCode   String?
+  website      String?
+  notes        String?
+  paymentTerms String?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Soft delete
+  deletedAt DateTime?
+
+  // Multi-tenancy
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  // Relations
+  products         Product[]
+  supplierAccount  SupplierAccount?
+
+  @@index([tenantId])
+  @@index([tenantId, name])
+  @@index([tenantId, isActive])
+  @@index([tenantId, deletedAt])
+}
+
+// ==================== CRM MODULE ====================
+
+model Customer {
+  id          String         @id @default(cuid())
+  firstName   String
+  lastName    String
+  email       String?
+  phone       String?
+  company     String?
+  jobTitle    String?
+  address     String?
+  city        String?
+  state       String?
+  country     String?
+  postalCode  String?
+  notes       String?
+  tags        String[]       @default([])
+  source      CustomerSource @default(DIRECT)
+  status      CustomerStatus @default(LEAD)
+  leadScore   Int            @default(0)
+  // Financial & Tax (KVKK / e-Dönüşüm)
+  taxId       String?        // Encrypted field (KVKK) - T.C. Kimlik / Vergi No
+  taxOffice   String?        // Vergi Dairesi
+  
+  totalSpent  Decimal        @default(0) @db.Decimal(10, 2)
+  orderCount  Int            @default(0)
+  lastOrderAt DateTime?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  // Soft delete
+  deletedAt DateTime?
+
+  // Multi-tenancy
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  // Relations
+  orders          Order[]
+  interactions    Interaction[]
+  customerAccount CustomerAccount?
+  checkNotes      CheckPromissoryNote[]
+
+  @@unique([email, tenantId])
+  @@index([tenantId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([tenantId, createdAt])
+  @@index([tenantId, status])
+  @@index([tenantId, source])
+  @@index([tenantId, deletedAt])
+}
+
+enum CustomerSource {
+  DIRECT
+  REFERRAL
+  WEBSITE
+  SOCIAL_MEDIA
+  ADVERTISEMENT
+  COLD_CALL
+  TRADE_SHOW
+  OTHER
+}
+
+enum CustomerStatus {
+  LEAD
+  QUALIFIED
+  OPPORTUNITY
+  PROPOSAL
+  NEGOTIATION
+  CUSTOMER
+  CHURNED
+}
+
+model Interaction {
+  id          String          @id @default(cuid())
+  type        InteractionType
+  subject     String
+  description String?
+  date        DateTime        @default(now())
+  duration    Int? // in minutes
+  outcome     String?
+  nextAction  String?
+  nextDate    DateTime?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  // Multi-tenancy
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  // Relations
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([customerId])
+  @@index([date])
+  @@index([tenantId, type])
+  @@index([customerId, date])
+}
+
+enum InteractionType {
+  CALL
+  EMAIL
+  MEETING
+  NOTE
+  TASK
+  DEMO
+  FOLLOW_UP
+  OTHER
+}
+
+// ==================== FINANCE MODULE ====================
+
+model Order {
+  id              String      @id @default(cuid())
+  orderNumber     String
+  status          OrderStatus @default(PENDING)
+  subtotal        Decimal     @db.Decimal(10, 2)
+  taxRate         Decimal     @default(0) @db.Decimal(5, 2) // Default KDV
+  taxAmount       Decimal     @default(0) @db.Decimal(10, 2)
+  taxDetails      Json?       // Multi-tax support (Tevkifat, ÖTV, vs.)
+  discountType    String?     @default("fixed") // "fixed" or "percentage"
+  discountValue   Decimal     @default(0) @db.Decimal(10, 2)
+  discountAmount  Decimal     @default(0) @db.Decimal(10, 2)
+  shippingAmount  Decimal     @default(0) @db.Decimal(10, 2)
+  total           Decimal     @db.Decimal(10, 2)
+  currency        String      @default("USD")
+  exchangeRate    Decimal?    @db.Decimal(14, 6) // Snapshot exchange rate
+  notes           String?
+  internalNotes   String?
+  shippingAddress String?
+  billingAddress  String?
+  paymentMethod   String?
+  paymentStatus   String      @default("unpaid")
+  paidAt          DateTime?
+  shippedAt       DateTime?
+  deliveredAt     DateTime?
+  cancelledAt     DateTime?
+  dueDate         DateTime?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  // Soft delete
+  deletedAt DateTime?
+
+  // Multi-tenancy
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  // Relations
+  customerId   String
+  customer     Customer      @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  costCenterId String?
+  costCenter   CostCenter?   @relation(fields: [costCenterId], references: [id], onDelete: SetNull)
+  items        OrderItem[]
+  transactions Transaction[]
+  eInvoices    EInvoice[]
+
+  @@unique([orderNumber, tenantId])
+  @@index([tenantId])
+  @@index([customerId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([tenantId, createdAt])
+  @@index([tenantId, status])
+  @@index([tenantId, deletedAt])
+}
+
+enum OrderStatus {
+  DRAFT
+  PENDING
+  CONFIRMED
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  COMPLETED
+  CANCELLED
+  REFUNDED
+  ON_HOLD
+}
+
+model OrderItem {
+  id          String   @id @default(cuid())
+  quantity    Decimal  @db.Decimal(10, 3)
+  unitPrice   Decimal  @db.Decimal(10, 2)
+  discount    Decimal  @default(0) @db.Decimal(10, 2)
+  taxRate     Decimal  @default(0) @db.Decimal(5, 2) // Snapshot
+  taxAmount   Decimal  @default(0) @db.Decimal(10, 2) // Snapshot
+  total       Decimal  @db.Decimal(10, 2)
+  productName String // Denormalized for historical accuracy
+  productSku  String // Denormalized for historical accuracy
+  notes       String?
+  createdAt   DateTime @default(now())
+
+  // Relations
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String?
+  product   Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@index([orderId])
+  @@index([productId])
+  @@index([productId, orderId])
+  @@index([orderId, productId])
+}
+
+model Transaction {
+  id          String            @id @default(cuid())
+  type        TransactionType
+  category    String?
+  amount      Decimal           @db.Decimal(10, 2)
+  currency    String            @default("USD")
+  exchangeRate Decimal?         @db.Decimal(14, 6) // Tarihsel Kur Snapshot
+  description String?
+  reference   String?
+  status      TransactionStatus @default(COMPLETED)
+  date        DateTime          @default(now())
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  // Soft delete
+  deletedAt DateTime?
+
+  // Multi-tenancy
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  // Relations
+  orderId String?
+  order   Order?  @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  costCenterId String?
+  costCenter   CostCenter? @relation(fields: [costCenterId], references: [id], onDelete: SetNull)
+  bankAccountId String?
+  bankAccount   BankAccount? @relation(fields: [bankAccountId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([orderId])
+  @@index([type])
+  @@index([date])
+  @@index([tenantId, type])
+  @@index([tenantId, date])
+  @@index([tenantId, category])
+  @@index([type, date])
+  @@index([tenantId, type, date])
+  @@index([tenantId, deletedAt])
+}
+
+enum TransactionType {
+  INCOME
+  EXPENSE
+  REFUND
+  TRANSFER
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+// ==================== HR MODULE ====================
+
+model Department {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  code        String?
+  color       String?
+  budget      Decimal? @db.Decimal(10, 2)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Soft delete
+  deletedAt DateTime?
+
+  // Multi-tenancy
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  // Self-relation for hierarchy
+  parentId String?
+  parent   Department?  @relation("DepartmentHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children Department[] @relation("DepartmentHierarchy")
+
+  // Relations
+  employees Employee[]
+
+  @@unique([code, tenantId])
+  @@index([tenantId])
+  @@index([parentId])
+  @@index([tenantId, name])
+  @@index([tenantId, deletedAt])
+}
+
+model Employee {
+  id               String         @id @default(cuid())
+  employeeId       String
+  firstName        String
+  lastName         String
+  email            String
+  phone            String?
+  avatar           String?
+  dateOfBirth      DateTime?
+  gender           String?
+  hireDate         DateTime
+  terminationDate  DateTime?
+  position         String
+  salary           Decimal?       @db.Decimal(10, 2)
+  salaryType       String         @default("monthly") // hourly, monthly, yearly
+  employmentType   EmploymentType @default(FULL_TIME)
+  status           EmployeeStatus @default(ACTIVE)
+  address          String?
+  city             String?
+  state            String?
+  country          String?
+  postalCode       String?
+  emergencyContact String?
+  emergencyPhone   String?
+  bankName         String?
+  bankAccount      String?        // Encrypted field (KVKK)
+  iban             String?        // Encrypted field (KVKK)
+  taxId            String?        // Encrypted field (KVKK) - T.C. Kimlik
+  notes            String?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  // Soft delete
+  deletedAt DateTime?
+
+  // Multi-tenancy
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  // Relations
+  departmentId  String?
+  department    Department?    @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  managerId     String?
+  manager       Employee?      @relation("EmployeeManager", fields: [managerId], references: [id], onDelete: SetNull)
+  subordinates  Employee[]     @relation("EmployeeManager")
+  userId        String?        @unique
+  user          User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
+  leaveRequests LeaveRequest[]
+
+  @@unique([employeeId, tenantId])
+  @@unique([email, tenantId])
+  @@index([tenantId])
+  @@index([departmentId])
+  @@index([managerId])
+  @@index([status])
+  @@index([tenantId, status])
+  @@index([tenantId, createdAt])
+  @@index([tenantId, departmentId])
+  @@index([tenantId, deletedAt])
+}
+
+enum EmploymentType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  INTERN
+  FREELANCE
+  TEMPORARY
+}
+
+enum EmployeeStatus {
+  ACTIVE
+  ON_LEAVE
+  TERMINATED
+  SUSPENDED
+  PROBATION
+}
+
+model LeaveRequest {
+  id           String      @id @default(cuid())
+  type         LeaveType
+  startDate    DateTime
+  endDate      DateTime
+  totalDays    Int
+  reason       String?
+  status       LeaveStatus @default(PENDING)
+  reviewedBy   String?
+  reviewedAt   DateTime?
+  reviewNotes  String?
+  attachments  String[]    @default([])
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  // Soft delete
+  deletedAt DateTime?
+
+  // Multi-tenancy
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  // Relations
+  employeeId String
+  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([employeeId])
+  @@index([status])
+  @@index([startDate, endDate])
+  @@index([tenantId, status])
+  @@index([tenantId, employeeId, status])
+  @@index([employeeId, status])
+  @@index([startDate])
+  @@index([tenantId, deletedAt])
+}
+
+enum LeaveType {
+  ANNUAL
+  SICK
+  PERSONAL
+  MATERNITY
+  PATERNITY
+  BEREAVEMENT
+  UNPAID
+  COMPENSATORY
+  OTHER
+}
+
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+  IN_PROGRESS
+}
+
+// ==================== TURKISH ACCOUNTING MODULE ====================
+// e-Fatura, e-Arşiv, e-İrsaliye, e-Defter, BA/BS, KDV/Tevkifat/Stopaj,
+// Dövizli muhasebe, enflasyon muhasebesi, cari hesap, çek/senet, masraf merkezi
+
+model Currency {
+  id        String   @id @default(cuid())
+  code      String   // TRY, USD, EUR, GBP, etc.
+  name      String
+  symbol    String   // ₺, $, €, £, etc.
+  isDefault Boolean  @default(false)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Soft delete
+  deletedAt DateTime?
+
+  // Multi-tenancy
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  // Relations
+  exchangeRatesFrom CurrencyExchangeRate[] @relation("FromCurrency")
+  exchangeRatesTo   CurrencyExchangeRate[] @relation("ToCurrency")
+
+  @@unique([code, tenantId])
+  @@index([tenantId])
+  @@index([tenantId, deletedAt])
+}
+
+model CurrencyExchangeRate {
+  id              String   @id @default(cuid())
+  rate            Decimal  @db.Decimal(14, 6)
+  date            DateTime @default(now())
+  source          String?  // TCMB, ECB, MANUAL
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Multi-tenancy
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  // Relations
+  fromCurrencyId String
+  fromCurrency   Currency @relation("FromCurrency", fields: [fromCurrencyId], references: [id], onDelete: Cascade)
+  toCurrencyId   String
+  toCurrency     Currency @relation("ToCurrency", fields: [toCurrencyId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([fromCurrencyId, toCurrencyId, date])
+  @@index([date])
+  @@index([fromCurrencyId, date])
+  @@index([toCurrencyId, date])
+  @@index([source])
+}
+
+model CostCenter {
+  id          String      @id @default(cuid())
+  code        String
+  name        String
+  description String?
+  isActive    Boolean     @default(true)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  // Soft delete
+  deletedAt DateTime?
+
+  // Multi-tenancy
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  // Relations
+  transactions Transaction[]
+  orders       Order[]
+  accountLines AccountEntryLine[]
+
+  @@unique([code, tenantId])
+  @@index([tenantId])
+  @@index([tenantId, isActive])
+  @@index([tenantId, deletedAt])
+}
+
+model BankAccount {
+  id            String         @id @default(cuid())
+  bankName      String
+  branchName    String?
+  branchCode    String?
+  accountNumber String
+  iban          String
+  accountType   BankAccountType @default(CHECKING)
+  currency      String         @default("TRY")
+  balance       Decimal        @default(0) @db.Decimal(18, 2)
+  isActive      Boolean        @default(true)
+  description   String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  // Soft delete
+  deletedAt DateTime?
+
+  // Multi-tenancy
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  // Relations
+  transactions   Transaction[]
+  accountLines   AccountEntryLine[]
+  checkNotes     CheckPromissoryNote[]
+
+  @@unique([iban, tenantId])
+  @@index([tenantId])
+  @@index([bankName])
+  @@index([tenantId, isActive])
+  @@index([tenantId, deletedAt])
+}
+
+enum BankAccountType {
+  CHECKING    // Vadesiz hesap
+  SAVINGS     // Vadeli hesap
+  LOAN        // Kredi hesabı
+  CREDIT_CARD // Kredi kartı
+  POS         // POS hesabı
+  E_WALLET    // Dijital cüzdan
+}
+
+model CheckPromissoryNote {
+  id                String            @id @default(cuid())
+  type              CheckNoteType
+  direction         CheckDirection
+  serialNumber      String
+  bankName          String?
+  bankBranch        String?
+  accountNumber     String?
+  issuerName        String            // Keşideci / Lehtar
+  issuerTaxId       String?           // Vergi kimlik numarası
+  amount            Decimal           @db.Decimal(18, 2)
+  currency          String            @default("TRY")
+  issueDate         DateTime          // Düzenleme tarihi
+  maturityDate      DateTime          // Vade tarihi
+  status            CheckNoteStatus   @default(IN_PORTFOLIO)
+  endorsements      Json?             // Ciro bilgileri (JSON array)
+  protestDate       DateTime?         // Protesto tarihi
+  protestFee        Decimal?          @db.Decimal(18, 2)
+  collectionDate    DateTime?         // Tahsil tarihi
+  collectionAmount  Decimal?          @db.Decimal(18, 2)
+  notes             String?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  // Soft delete
+  deletedAt DateTime?
+
+  // Multi-tenancy
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  // Relations
+  bankAccountId String?
+  bankAccount   BankAccount?         @relation(fields: [bankAccountId], references: [id], onDelete: SetNull)
+  customerId    String?
+  customer      Customer?            @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  accountLines  AccountEntryLine[]
+
+  @@index([tenantId])
+  @@index([status])
+  @@index([maturityDate])
+  @@index([serialNumber, tenantId])
+  @@index([customerId])
+  @@index([tenantId, customerId])
+  @@index([tenantId, status, maturityDate])
+  @@index([tenantId, deletedAt])
+}
+
+enum CheckNoteType {
+  CHECK            // Çek
+  PROMISSORY_NOTE  // Senet / Bono
+}
+
+enum CheckDirection {
+  RECEIVED  // Müşteriden alınan (tahsil edilecek)
+  ISSUED    // Keşide edilen (ödenecek)
+}
+
+enum CheckNoteStatus {
+  IN_PORTFOLIO   // Portföyde
+  ENDORSED       // Ciro edilmiş / devredilmiş
+  DEPOSITED      // Bankaya tahsilata verilmiş
+  COLLECTED      // Tahsil edilmiş
+  BOUNCED        // Karşılıksız çıkmış
+  PROTESTED      // Protesto edilmiş
+  CANCELLED      // İptal edilmiş
+  RETURNED       // Geri dönmüş
+}
+
+model CustomerAccount {
+  id              String   @id @default(cuid())
+  accountCode     String   // Cari hesap kodu
+  riskLimit       Decimal  @default(0) @db.Decimal(18, 2)
+  currentBalance  Decimal  @default(0) @db.Decimal(18, 2)
+  overdueBalance  Decimal  @default(0) @db.Decimal(18, 2)
+  creditLimit     Decimal? @db.Decimal(18, 2)
+  paymentTerms    Int      @default(30)  // Vade gün sayısı
+  isActive        Boolean  @default(true)
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Soft delete
+  deletedAt DateTime?
+
+  // Multi-tenancy
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  // Relations
+  customerId   String
+  customer     Customer           @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  accountLines AccountEntryLine[]
+
+  @@unique([accountCode, tenantId])
+  @@unique([customerId])
+  @@index([tenantId])
+  @@index([currentBalance])
+  @@index([tenantId, isActive])
+  @@index([tenantId, deletedAt])
+}
+
+model SupplierAccount {
+  id              String   @id @default(cuid())
+  accountCode     String   // Cari hesap kodu
+  riskLimit       Decimal  @default(0) @db.Decimal(18, 2)
+  currentBalance  Decimal  @default(0) @db.Decimal(18, 2)
+  overdueBalance  Decimal  @default(0) @db.Decimal(18, 2)
+  creditLimit     Decimal? @db.Decimal(18, 2)
+  paymentTerms    Int      @default(30)
+  isActive        Boolean  @default(true)
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Soft delete
+  deletedAt DateTime?
+
+  // Multi-tenancy
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  // Relations
+  supplierId   String
+  supplier     Supplier           @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  accountLines AccountEntryLine[]
+
+  @@unique([accountCode, tenantId])
+  @@unique([supplierId])
+  @@index([tenantId])
+  @@index([currentBalance])
+  @@index([tenantId, isActive])
+  @@index([tenantId, deletedAt])
+}
+
+model AccountEntry {
+  id          String    @id @default(cuid())
+  entryNumber String    // Fiş numarası (otomatik oluşturulur)
+  entryType   EntryType
+  description String
+  entryDate   DateTime
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Soft delete
+  deletedAt DateTime?
+
+  // Multi-tenancy
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  // Relations
+  lines AccountEntryLine[]
+
+  @@unique([entryNumber, tenantId])
+  @@index([tenantId])
+  @@index([entryDate])
+  @@index([tenantId, entryDate])
+  @@index([tenantId, deletedAt])
+}
+
+enum EntryType {
+  DEBIT_NOTE    // Borç dekontu / Tahsil fişi
+  CREDIT_NOTE   // Alacak dekontu / Tediye fişi
+  OPENING       // Açılış fişi
+  CLOSING       // Kapanış fişi
+  TRANSFER      // Transfer / Mahsup fişi
+  CORRECTION    // Düzeltme fişi
+}
+
+model AccountEntryLine {
+  id          String @id @default(cuid())
+  side        Side   // DEBIT = Borç, CREDIT = Alacak
+  amount      Decimal @db.Decimal(18, 2)
+  description String?
+
+  // Relations
+  entryId String
+  entry   AccountEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+
+  // Optional links to related entities
+  costCenterId     String?
+  costCenter       CostCenter?          @relation(fields: [costCenterId], references: [id], onDelete: SetNull)
+  customerAccountId String?
+  customerAccount  CustomerAccount?     @relation(fields: [customerAccountId], references: [id], onDelete: SetNull)
+  supplierAccountId String?
+  supplierAccount  SupplierAccount?     @relation(fields: [supplierAccountId], references: [id], onDelete: SetNull)
+  bankAccountId    String?
+  bankAccount      BankAccount?         @relation(fields: [bankAccountId], references: [id], onDelete: SetNull)
+  checkNoteId      String?
+  checkNote        CheckPromissoryNote? @relation(fields: [checkNoteId], references: [id], onDelete: SetNull)
+  eInvoiceId       String?
+  eInvoice         EInvoice?            @relation(fields: [eInvoiceId], references: [id], onDelete: SetNull)
+
+  @@index([entryId])
+  @@index([customerAccountId])
+  @@index([supplierAccountId])
+  @@index([bankAccountId])
+  @@index([costCenterId])
+  @@index([entryId, side])
+}
+
+enum Side {
+  DEBIT  // Borç
+  CREDIT // Alacak
+}
+
+model TaxType {
+  id          String       @id @default(cuid())
+  code        String       // KDV1, KDV2, TEVKIFAT, STOPAJ, OZEL_ORAN
+  name        String       // %18 KDV, %8 KDV, %1 KDV, Tevkifat, Stopaj
+  rate        Decimal      @db.Decimal(5, 2) // Oran (yüzde)
+  category    TaxCategory
+  description String?
+  isActive    Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  // Soft delete
+  deletedAt DateTime?
+
+  // Multi-tenancy
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([code, tenantId])
+  @@index([tenantId])
+  @@index([tenantId, deletedAt])
+}
+
+enum TaxCategory {
+  VAT           // KDV (Katma Değer Vergisi)
+  WITHHOLDING   // Tevkifat
+  STOPAJ        // Stopaj (Gelir Vergisi Kesintisi)
+  SPECIAL       // Özel İletişim Vergisi, vb.
+}
+
+model EInvoice {
+  id                  String          @id @default(cuid())
+  uuid                String          @unique // GİB tarafından atanan UUID
+  documentType        DocumentType
+  profile             String?         // TEMELFATURA, TICARIFATURA, EARSIVFATURA, IHRACAT
+  invoiceNumber       String?         // GİB'den alınan fatura numarası
+  documentNumber      String?         // Belge numarası (e-Arşiv için)
+  status              EInvoiceStatus  @default(DRAFT)
+
+  // Sender / Receiver (Vergi Kimlik Bilgileri)
+  senderTaxId         String
+  senderName          String
+  receiverTaxId       String
+  receiverName        String
+  receiverEmail       String?
+
+  // Financial (Turkish specific)
+  grossTotal          Decimal         @db.Decimal(18, 2) // Brüt toplam
+  vatBaseTotal        Decimal         @db.Decimal(18, 2) // KDV matrah toplamı
+  vatTotal            Decimal         @db.Decimal(18, 2) // Toplam KDV
+  netTotal            Decimal         @db.Decimal(18, 2) // Net toplam
+  withholdingTotal    Decimal         @default(0) @db.Decimal(18, 2) // Toplam tevkifat
+  currency            String          @default("TRY")
+  exchangeRate        Decimal?        @db.Decimal(10, 4) // Döviz kuru (TL ise 1)
+  exchangeRateDate    DateTime?
+
+  // Dates
+  issueDate           DateTime        // Düzenlenme tarihi
+  dueDate             DateTime?       // Vade tarihi
+
+  // e-Belge Content
+  xmlContent          String?         @db.Text // UBL 2.1 TR XML
+  pdfContent          Bytes?          // PDF çıktısı
+  hash                String?         // Belge hash değeri
+  signature           String?         // Mali mühür / e-imza
+
+  // Integrator
+  integratorId        String?         // Özel entegratör referansı
+  integratorResponse  Json?           // Entegratör yanıtı (hata kodları, vb.)
+
+  // Retry mechanism
+  retryCount          Int             @default(0)
+  lastError           String?         @db.Text
+  lastAttemptAt       DateTime?
+
+  notes               String?
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+
+  // Soft delete
+  deletedAt DateTime?
+
+  // Multi-tenancy
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  // Relations
+  orderId      String?
+  order        Order?             @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  accountLines AccountEntryLine[]
+
+  @@index([tenantId])
+  @@index([status])
+  @@index([uuid])
+  @@index([invoiceNumber])
+  @@index([issueDate])
+  @@index([senderTaxId])
+  @@index([receiverTaxId])
+  @@index([orderId])
+  @@index([tenantId, status])
+  @@index([tenantId, issueDate])
+  @@index([tenantId, deletedAt])
+}
+
+enum DocumentType {
+  INVOICE          // e-Fatura
+  ARCHIVE          // e-Arşiv
+  DESPATCH_ADVICE  // e-İrsaliye
+  LEDGER           // e-Defter
+}
+
+enum EInvoiceStatus {
+  DRAFT            // Taslak
+  PENDING_SIGN     // İmzalanmayı bekliyor
+  SIGNED           // İmzalandı
+  SENDING          // Gönderiliyor
+  SENT_TO_GIB      // GİB'e gönderildi
+  GIB_ACCEPTED     // GİB tarafından kabul edildi
+  GIB_REJECTED     // GİB tarafından reddedildi
+  GIB_WARNING      // GİB uyarılı kabul
+  CANCELLED        // İptal edildi
+  ERROR            // Hata
+}
+
+model BaBsForm {
+  id          String         @id @default(cuid())
+  formType    BaBsFormType
+  year        Int
+  month       Int
+  status      BaBsFormStatus @default(DRAFT)
+  xmlContent  String?        @db.Text // GİB XML formatı
+  submittedAt DateTime?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  // Soft delete
+  deletedAt DateTime?
+
+  // Multi-tenancy
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  // Relations
+  items BaBsFormItem[]
+
+  @@unique([formType, year, month, tenantId])
+  @@index([tenantId])
+  @@index([tenantId, year, month])
+  @@index([tenantId, deletedAt])
+}
+
+enum BaBsFormType {
+  BA // Mal ve Hizmet Alış Bildirimi
+  BS // Mal ve Hizmet Satış Bildirimi
+}
+
+enum BaBsFormStatus {
+  DRAFT
+  PENDING
+  SUBMITTED
+  ACCEPTED
+  REJECTED
+}
+
+model BaBsFormItem {
+  id            String   @id @default(cuid())
+  taxId         String   // Karşı taraf vergi kimlik numarası
+  name          String   // Karşı taraf ünvanı / adı soyadı
+  documentCount Int      // Belge sayısı
+  totalAmount   Decimal  @db.Decimal(18, 2) // Toplam tutar
+
+  // Relations
+  formId String
+  form   BaBsForm @relation(fields: [formId], references: [id], onDelete: Cascade)
+
+  @@index([formId])
+  @@index([taxId])
+  @@index([formId, taxId])
+}
+
+model InflationCoefficient {
+  id          String   @id @default(cuid())
+  year        Int
+  month       Int
+  coefficient Decimal  @db.Decimal(12, 8) // Düzeltme katsayısı
+  ppi         Decimal? @db.Decimal(12, 4) // Yİ-ÜFE (Yurt İçi Üretici Fiyat Endeksi)
+  source      String?  // TÜİK, Hazine, vb.
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Multi-tenancy
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([year, month, tenantId])
+  @@index([tenantId])
+  @@index([year, month])
+  @@index([tenantId, year, month])
+}
+
+// ==================== NOTIFICATIONS ====================
+
+model Notification {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  color       String?  @default("bg-blue-500")
+  isRead      Boolean  @default(false)
+  link        String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Multi-tenancy
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  // User
+  userId String
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([userId])
+  @@index([isRead])
+  @@index([createdAt])
+  @@index([userId, createdAt])
+  @@index([tenantId, userId, isRead])
+}

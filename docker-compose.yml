@@ -1,0 +1,104 @@
+# ─── Deftra ERP — Docker Compose ────────────────────────────────────────────
+# Production-ready setup with PostgreSQL 16 and Next.js standalone server.
+#
+# USAGE:
+#   cp .env.example .env.local
+#   # Edit .env.local with your secrets
+#   docker compose --env-file .env.local up -d
+#
+# SECURITY NOTES:
+#   - NEVER use the default secrets in production. Override via .env.local.
+#   - Generate strong AUTH_SECRET: openssl rand -base64 32
+#   - Generate ENCRYPTION_KEY: openssl rand -hex 32
+#   - Generate ENCRYPTION_IV:  openssl rand -hex 16
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: deftra-db
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-deftra}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-deftra_secret_change_me}
+      POSTGRES_DB: ${POSTGRES_DB:-deftra}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-deftra}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: deftra-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      # Database
+      DATABASE_URL: postgresql://${POSTGRES_USER:-deftra}:${POSTGRES_PASSWORD:-deftra_secret_change_me}@postgres:5432/${POSTGRES_DB:-deftra}
+      # Auth (REQUIRED: override in .env.local)
+      AUTH_SECRET: ${AUTH_SECRET:-change-me-in-production}
+      AUTH_URL: "http://localhost:3000"
+      # Encryption (REQUIRED: override in .env.local)
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:-0000000000000000000000000000000000000000000000000000000000000000}
+      ENCRYPTION_IV: ${ENCRYPTION_IV:-00000000000000000000000000000000}
+      # App
+      NODE_ENV: production
+      NEXTAUTH_URL: "http://localhost:3000"
+      REDIS_URL: "redis://redis:6379"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: >
+      sh -c "npx prisma migrate deploy && node server.js"
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/api/health', r => {process.exit(r.statusCode === 200 ? 0 : 1)}).on('error', () => process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  redis:
+    image: redis:7-alpine
+    container_name: deftra-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: redis-server --save 60 1 --loglevel warning
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Optional: pgAdmin for database management
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: deftra-pgadmin
+    restart: unless-stopped
+    ports:
+      - "5050:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@deftra.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      - postgres
+    profiles:
+      - tools
+
+volumes:
+  postgres_data:
+  pgadmin_data:
+  redis_data:
