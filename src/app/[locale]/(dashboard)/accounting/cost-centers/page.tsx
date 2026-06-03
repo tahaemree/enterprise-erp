@@ -1,4 +1,5 @@
 import { Link } from "@/i18n/navigation"
+import { RoleGate } from "@/components/auth/role-gate"
 import { Plus, Briefcase, Layers, CheckCircle, XCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { getTranslations } from "next-intl/server"
@@ -41,12 +42,14 @@ export default async function AccountingCostCentersPage({
                         <Layers className="h-4 w-4" />
                         <span>{t("accounting.costCenters.centers", { count: costCenters.length })}</span>
                     </div>
+                    <RoleGate allow="MANAGER">
                     <Button asChild>
                         <Link href="/accounting/cost-centers/new">
                             <Plus className="mr-2 h-4 w-4" />
                             {t("accounting.costCenters.addCenter")}
                         </Link>
                     </Button>
+                    </RoleGate>
                 </div>
             </div>
 

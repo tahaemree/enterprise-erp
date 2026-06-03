@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest"
+import { describe, it, expect, vi } from "vitest"
 import { z } from "zod"
 
 // Mock next/headers to avoid "called outside a request scope" error
@@ -415,30 +415,51 @@ describe("executeAction", () => {
             ok: false,
             error: "Standard error message",
             statusCode: 500,
+            requestId: expect.any(String),
         })
     })
 
     it("should handle non-Error thrown values", async () => {
         const result = await executeAction(async () => {
             // Simulate throwing a non-Error value (e.g., a string)
-            throw "string error" // eslint-disable-line no-throw-literal
+            throw "string error"
         })
         expect(result).toEqual({
             ok: false,
             error: "An unexpected error occurred",
             statusCode: 500,
+            requestId: expect.any(String),
         })
     })
 
     it("should handle null thrown values", async () => {
         const result = await executeAction(async () => {
-            throw null // eslint-disable-line no-throw-literal
+            throw null
         })
         expect(result).toEqual({
             ok: false,
             error: "An unexpected error occurred",
             statusCode: 500,
+            requestId: expect.any(String),
         })
+    })
+
+    it("should re-throw Next.js control-flow errors (redirect/notFound)", async () => {
+        const redirectError = Object.assign(new Error("NEXT_REDIRECT"), {
+            digest: "NEXT_REDIRECT;replace;/login;307;",
+        })
+        await expect(
+            executeAction(async () => {
+                throw redirectError
+            })
+        ).rejects.toBe(redirectError)
+    })
+
+    it("should NOT attach a requestId to expected 4xx domain errors", async () => {
+        const result = await executeAction(async () => {
+            throw new NotFoundError("Product")
+        })
+        expect(result).not.toHaveProperty("requestId")
     })
 
     it("should properly preserve types through the wrapper", async () => {

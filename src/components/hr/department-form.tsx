@@ -20,9 +20,11 @@ import {
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { createDepartmentSchema, type DepartmentFormData } from "@/lib/validations/hr"
-import { createDepartment, updateDepartment } from "@/lib/actions/departments"
+import { createDepartment } from "@/lib/actions/departments"
 
-export function DepartmentForm({ initialData }: { initialData?: any }) {
+type DepartmentInitialData = Record<string, unknown> & { id?: string }
+
+export function DepartmentForm({ initialData }: { initialData?: DepartmentInitialData }) {
     const t = useTranslations("departmentForm")
     const tVal = useTranslations("validation")
     const router = useRouter()
@@ -36,7 +38,7 @@ export function DepartmentForm({ initialData }: { initialData?: any }) {
             budget: undefined,
         },
     })
-    useEffect(() => { if (initialData) { form.reset(initialData) } }, [initialData, form])
+    useEffect(() => { if (initialData) { form.reset(initialData as DepartmentFormData) } }, [initialData, form])
 
 
     async function onSubmit(data: DepartmentFormData) {

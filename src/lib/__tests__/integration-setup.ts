@@ -7,7 +7,7 @@
  * 3. Cleans up test data between test files
  */
 
-import { vi, beforeAll, afterAll } from "vitest"
+import { vi } from "vitest"
 import { PrismaClient } from "@prisma/client"
 
 // ─── Types ───────────────────────────────────────────────────────────────

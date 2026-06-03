@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { DataTableColumnHeader } from "@/components/tables/data-table-column-header"
 import { formatCurrency, formatDate } from "@/lib/utils"
+import type { AppTranslator } from "@/lib/i18n-types"
 
 export type Transaction = {
     id: string
@@ -78,7 +79,7 @@ const categoryConfig: Record<string, { icon: string; labelKey: string }> = {
     other: { icon: "📁", labelKey: "transactionForm.category_OTHER_EXPENSE" },
 }
 
-export const createTransactionColumns = (t: any, onDelete?: (id: string) => void): ColumnDef<Transaction>[] => [
+export const createTransactionColumns = (t: AppTranslator, onDelete?: (id: string) => void): ColumnDef<Transaction>[] => [
     {
         accessorKey: "type",
         header: ({ column }) => (

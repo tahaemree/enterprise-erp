@@ -24,7 +24,7 @@ export default function MetricsSection() {
     <section id="metrics" className="relative py-28">
       <div className="mx-auto max-w-[1240px] px-6">
         <SectionHeader
-          eyebrow="{t('title')}"
+          eyebrow={t('title')}
           title="Numbers that hold up under audit."
           description="Deftra runs the operations of public companies, sovereign agencies, and the world's largest private operators."
         />

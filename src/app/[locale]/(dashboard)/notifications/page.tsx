@@ -1,12 +1,12 @@
-import { getAllNotifications, markAllAsRead } from "@/lib/actions/notifications"
+import { getAllNotifications } from "@/lib/actions/notifications"
 import { getTranslations } from "next-intl/server"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Bell, CheckCircle2, Circle } from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
 import { tr } from "date-fns/locale"
 import Link from "next/link"
 import { MarkAllReadButton, MarkReadButton } from "./client-buttons"
+import type { ReactNode } from "react"
 
 export default async function NotificationsPage(props: { params: Promise<{ locale: string }> }) {
     const params = await props.params;
@@ -97,6 +97,6 @@ export default async function NotificationsPage(props: { params: Promise<{ local
     )
 }
 
-function Badge({ children, variant, className }: any) {
+function Badge({ children, variant, className }: { children: ReactNode; variant?: "secondary"; className?: string }) {
     return <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${variant === 'secondary' ? 'border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80' : ''} ${className}`}>{children}</span>
 }

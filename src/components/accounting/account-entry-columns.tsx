@@ -2,7 +2,7 @@
 
 import { ColumnDef } from "@tanstack/react-table"
 import { useTranslations } from "next-intl"
-import { MoreHorizontal, Eye, Pencil, Trash2, FileText } from "lucide-react"
+import { MoreHorizontal, Eye, Pencil, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -53,7 +53,7 @@ const entryTypeConfig = (t: (key: string) => string): Record<string, { label: st
     CORRECTION: { label: t("entryTypeCorrection"), className: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400" },
 })
 
-export const createAccountEntryColumns = (onDelete?: (id: string) => void): ColumnDef<AccountEntry>[] => {
+export const useAccountEntryColumns = (onDelete?: (id: string) => void): ColumnDef<AccountEntry>[] => {
     const t = useTranslations("accounting.accountEntries.columns")
     const tc = entryTypeConfig(t)
     return [

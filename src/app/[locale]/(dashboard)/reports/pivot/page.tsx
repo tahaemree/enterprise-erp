@@ -1,8 +1,5 @@
-import { getTranslations } from "next-intl/server"
 import { getTenantPrisma } from "@/lib/prisma"
 import { requireAuth, requirePermission } from "@/lib/auth-utils"
-import { PivotTable } from "@/components/reporting/pivot-table"
-import type { ColumnDef } from "@tanstack/react-table"
 
 export const metadata = {
     title: "Dinamik Pivot Raporlar",
@@ -15,7 +12,6 @@ export default async function PivotReportsPage() {
     requirePermission(user, "reports:read")
 
     const db = getTenantPrisma(user.tenantId)
-    const t = await getTranslations("reports")
 
     // Örnek: Satış Analizi için Sipariş Kalemlerini çekiyoruz
     const orderItems = await db.orderItem.findMany({

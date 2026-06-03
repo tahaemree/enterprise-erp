@@ -5,7 +5,7 @@ import { getTranslations } from "next-intl/server"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Edit, ShoppingCart, Calendar, MapPin, Hash, User } from "lucide-react"
+import { Edit, ShoppingCart, Calendar, MapPin, User } from "lucide-react"
 import Link from "next/link"
 import { formatCurrency, formatDate } from "@/lib/utils"
 

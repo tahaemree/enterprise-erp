@@ -1,6 +1,49 @@
 import { Prisma } from "@prisma/client"
 import { headers } from "next/headers"
 
+type MutableRecord = Record<string, unknown>
+
+type FindUniqueDelegate = {
+    findUnique(args: { where: unknown }): Promise<unknown>
+}
+
+type AuditLogCreateDelegate = {
+    create(args: {
+        data: {
+            tenantId: string
+            action: string
+            entity: string
+            entityId: string
+            oldData: Prisma.InputJsonValue | null
+            newData: Prisma.InputJsonValue | null
+            userId: string | null
+            ipAddress: string
+            userAgent: string
+        }
+    }): Promise<unknown>
+}
+
+function asMutableRecord(value: unknown): MutableRecord | null {
+    return value !== null && typeof value === "object" && !Array.isArray(value)
+        ? value as MutableRecord
+        : null
+}
+
+function hasFindUnique(value: unknown): value is FindUniqueDelegate {
+    return asMutableRecord(value)?.findUnique instanceof Function
+}
+
+function hasAuditLogCreate(value: unknown): value is { auditLog: AuditLogCreateDelegate } {
+    const record = asMutableRecord(value)
+    const auditLog = asMutableRecord(record?.auditLog)
+    return auditLog?.create instanceof Function
+}
+
+function toJsonValue(value: unknown): Prisma.InputJsonValue | null {
+    if (value == null) return null
+    return JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue
+}
+
 /**
  * Creates an Audit Log extension for Prisma.
  * This captures all mutations (create, update, delete) and saves the delta (old vs new)
@@ -23,17 +66,21 @@ export const withAuditLog = Prisma.defineExtension((client) => {
                         return query(args)
                     }
 
-                    let oldData = null
+                    let oldData: MutableRecord | null = null
+                    const argsRecord = asMutableRecord(args)
                     
                     // Attempt to fetch old data before update or delete
                     if (operation === "update" || operation === "delete") {
                         try {
-                            if ((args as any).where) {
-                                oldData = await (client as any)[model].findUnique({
-                                    where: (args as any).where
-                                })
+                            if (argsRecord?.where) {
+                                const modelDelegate = (client as Record<string, unknown>)[model]
+                                if (hasFindUnique(modelDelegate)) {
+                                    oldData = asMutableRecord(await modelDelegate.findUnique({
+                                        where: argsRecord.where
+                                    }))
+                                }
                             }
-                        } catch (error) {
+                        } catch (_error) {
                             // Ignore fetch errors, just proceed without oldData
                         }
                     }
@@ -48,12 +95,14 @@ export const withAuditLog = Prisma.defineExtension((client) => {
                     }
 
                     // Attempt to extract userId/tenantId from result or args
-                    const tenantId = (result as any)?.tenantId || (args as any).data?.tenantId || oldData?.tenantId
-                    const userId = (args as any).data?.userId || (args as any).data?.updatedBy || null
-                    const entityId = (result as any)?.id || oldData?.id || "unknown"
+                    const resultRecord = asMutableRecord(result)
+                    const dataRecord = asMutableRecord(argsRecord?.data)
+                    const tenantId = resultRecord?.tenantId || dataRecord?.tenantId || oldData?.tenantId
+                    const userId = dataRecord?.userId || dataRecord?.updatedBy || null
+                    const entityId = resultRecord?.id || oldData?.id || "unknown"
 
                     // If we have a tenantId, we can save the audit log
-                    if (tenantId) {
+                    if (typeof tenantId === "string" && hasAuditLogCreate(client)) {
                         try {
                             // Best-effort to get IP Address if in Next.js Server Context
                             let ipAddress = "unknown"
@@ -62,20 +111,20 @@ export const withAuditLog = Prisma.defineExtension((client) => {
                                 const h = await headers()
                                 ipAddress = h.get("x-forwarded-for") || "unknown"
                                 userAgent = h.get("user-agent") || "unknown"
-                            } catch (e) {
+                            } catch (_e) {
                                 // Ignore headers error (might not be in request context, e.g. cron job)
                             }
 
                             // Fire and forget the audit log creation
-                            Promise.resolve((client as any).auditLog.create({
+                            Promise.resolve(client.auditLog.create({
                                 data: {
                                     tenantId,
                                     action: operation.toUpperCase(),
                                     entity: model,
                                     entityId: String(entityId),
-                                    oldData: oldData ? JSON.parse(JSON.stringify(oldData)) : null,
-                                    newData: newData ? JSON.parse(JSON.stringify(newData)) : null,
-                                    userId,
+                                    oldData: toJsonValue(oldData),
+                                    newData: toJsonValue(newData),
+                                    userId: typeof userId === "string" ? userId : null,
                                     ipAddress,
                                     userAgent
                                 }

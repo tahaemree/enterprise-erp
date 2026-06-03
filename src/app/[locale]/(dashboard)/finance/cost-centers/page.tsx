@@ -1,4 +1,5 @@
 import { Link } from "@/i18n/navigation"
+import { RoleGate } from "@/components/auth/role-gate"
 import { Plus, Briefcase } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { getTranslations } from "next-intl/server"
@@ -36,12 +37,14 @@ export default async function CostCentersPage({
                         {t("finance.costCenters.description")}
                     </p>
                 </div>
+                <RoleGate allow="MANAGER">
                 <Button asChild>
                     <Link href="/finance/cost-centers/new">
                         <Plus className="mr-2 h-4 w-4" />
                         {t("finance.costCenters.addCenter")}
                     </Link>
                 </Button>
+                </RoleGate>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

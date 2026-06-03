@@ -4,13 +4,12 @@ import { revalidatePath } from "next/cache"
 import { getTenantPrisma } from "@/lib/prisma"
 import { requireAuth, requireManager } from "@/lib/auth-utils"
 import logger from "@/lib/logger"
-import { getPaginationArgs, createPaginatedResult, type PaginationParams, type PaginatedResult } from "@/lib/pagination"
 import {
     taxTypeSchema,
     type TaxTypeFormValues,
 } from "@/lib/validations/tr-accounting"
 import type { Prisma } from "@prisma/client"
-import { executeAction, fromZodError, NotFoundError, ConflictError, type ActionResult } from "@/lib/errors"
+import { executeAction, fromZodError, type ActionResult } from "@/lib/errors"
 import { MODULE, PATHS } from "@/lib/constants"
 
 // ==================== VERGİ TÜRÜ ====================
@@ -24,7 +23,7 @@ export async function getTaxTypes() {
     })
 }
 
-export async function createTaxType(data: TaxTypeFormValues) : Promise<ActionResult<Prisma.TaxTypeGetPayload<{}>>> {
+export async function createTaxType(data: TaxTypeFormValues) : Promise<ActionResult<Prisma.TaxTypeGetPayload<Record<string, never>>>> {
     return executeAction(async () => {
     
         const user = await requireAuth()

@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { taxIdSchema } from "./tax-id"
 
 // ==================== DÖVİZ & KUR ====================
 
@@ -145,7 +146,9 @@ export const eInvoiceSchema = z.object({
     documentType: z.enum(["INVOICE", "ARCHIVE", "DESPATCH_ADVICE"]),
     profile: z.string().optional(),
     orderId: z.string().optional(),
-    receiverTaxId: z.string().min(1),
+    // GİB rejects documents with structurally invalid tax IDs — validate the
+    // VKN/TCKN checksum, not just the length.
+    receiverTaxId: taxIdSchema,
     receiverName: z.string().min(1),
     receiverEmail: z.string().email().optional().or(z.literal("")),
     grossTotal: z.coerce.number().min(0),

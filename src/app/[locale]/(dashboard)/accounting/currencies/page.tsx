@@ -1,4 +1,5 @@
 import { Link } from "@/i18n/navigation"
+import { RoleGate } from "@/components/auth/role-gate"
 import { getTranslations } from "next-intl/server"
 import { Plus, Coins, CheckCircle, XCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -38,12 +39,14 @@ export default async function CurrenciesPage({
                         {t("accounting.currencies.description")}
                     </p>
                 </div>
+                <RoleGate allow="MANAGER">
                 <Button asChild>
                     <Link href="/accounting/currencies/new">
                         <Plus className="mr-2 h-4 w-4" />
                         {t("accounting.currencies.newCurrency")}
                     </Link>
                 </Button>
+                </RoleGate>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

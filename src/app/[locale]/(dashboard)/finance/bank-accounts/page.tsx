@@ -1,11 +1,11 @@
 import { Link } from "@/i18n/navigation"
+import { RoleGate } from "@/components/auth/role-gate"
 import { Plus, Landmark, CreditCard, Wallet } from "lucide-react"
 import { getTranslations, getFormatter } from "next-intl/server"
 import { Button } from "@/components/ui/button"
 import type { BankAccountRow } from "@/components/finance/bank-account-columns"
 import { BankAccountsTable } from "@/components/finance/bank-accounts-table"
 import { getBankAccounts } from "@/lib/actions/bank-accounts"
-import { formatCurrency } from "@/lib/utils"
 
 export default async function BankAccountsPage({
     params: _params,
@@ -55,12 +55,14 @@ export default async function BankAccountsPage({
                         {globalT("finance.bankAccounts.description")}
                     </p>
                 </div>
+                <RoleGate allow="MANAGER">
                 <Button asChild>
                     <Link href="/finance/bank-accounts/new">
                         <Plus className="mr-2 h-4 w-4" />
                         {globalT("finance.bankAccounts.addAccount")}
                     </Link>
                 </Button>
+                </RoleGate>
             </div>
 
             <div className="grid gap-5 sm:grid-cols-3 lg:grid-cols-3">

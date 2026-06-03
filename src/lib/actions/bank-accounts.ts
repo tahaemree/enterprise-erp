@@ -8,9 +8,9 @@ import logger from "@/lib/logger"
 import { executeAction, type ActionResult, fromZodError } from "@/lib/errors"
 import { activityLogService } from "@/services/activity-log.service"
 import type { Prisma } from "@prisma/client"
-import { ENTITY_TYPE, MODULE, PATHS } from "@/lib/constants"
+import { ENTITY_TYPE, PATHS } from "@/lib/constants"
 
-type BankAccountResult = Prisma.BankAccountGetPayload<{}>
+type BankAccountResult = Prisma.BankAccountGetPayload<Record<string, never>>
 
 export async function getBankAccounts() {
     const user = await requireAuth()

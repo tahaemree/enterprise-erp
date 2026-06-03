@@ -163,12 +163,6 @@ interface TransactionRow {
     date: Date
 }
 
-interface OrderRow {
-    id: string
-    total: number
-    createdAt: Date
-}
-
 // ── INCOME STATEMENT ──────────────────────────────────────────────────────
 
 const INCOME_CATEGORY_GROUPS: Record<string, string[]> = {
@@ -437,7 +431,7 @@ export async function getPivotData(
     tenantId: string,
     config: PivotConfig,
 ): Promise<PivotResult> {
-    const { rows, columns, values, dateRange, granularity = "monthly" } = config
+    const { rows, columns, values, dateRange } = config
     const isCurrency = values[0]?.aggregation !== "count"
 
     // Fetch transactions as the base data source

@@ -1,4 +1,3 @@
-import { unstable_cache } from "next/cache"
 import { getTenantPrisma } from "@/lib/prisma"
 
 export interface DashboardStatsDTO {

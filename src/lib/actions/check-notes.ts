@@ -10,7 +10,7 @@ import { activityLogService } from "@/services/activity-log.service"
 import type { Prisma } from "@prisma/client"
 import { ENTITY_TYPE, MODULE, PATHS } from "@/lib/constants"
 
-type CheckNoteResult = Omit<Prisma.CheckPromissoryNoteGetPayload<{}>, 'amount'> & { amount: number }
+type CheckNoteResult = Omit<Prisma.CheckPromissoryNoteGetPayload<Record<string, never>>, 'amount'> & { amount: number }
 
 export async function getCheckNotes() {
     const user = await requireAuth()

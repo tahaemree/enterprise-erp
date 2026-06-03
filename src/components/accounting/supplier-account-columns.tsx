@@ -24,7 +24,7 @@ import {
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { DataTableColumnHeader } from "@/components/tables/data-table-column-header"
-import { formatCurrency, formatDate } from "@/lib/utils"
+import { formatCurrency } from "@/lib/utils"
 
 export type SupplierAccount = {
     id: string

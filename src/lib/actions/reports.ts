@@ -14,7 +14,7 @@ import {
 } from "@/lib/services/reporting-engine"
 import type { DateRange, PivotConfig } from "@/lib/services/reporting-engine"
 import { serializePrisma } from "@/lib/utils"
-import { CACHE_TAGS, MODULE } from "@/lib/constants"
+import { CACHE_TAGS } from "@/lib/constants"
 
 export async function getIncomeStatementData(
     startDate: Date,

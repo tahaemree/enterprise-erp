@@ -7,15 +7,14 @@ import logger from "@/lib/logger"
 import { getPaginationArgs, createPaginatedResult, type PaginationParams, type PaginatedResult } from "@/lib/pagination"
 import {
     costCenterSchema,
-    type CostCenterFormValues,
 } from "@/lib/validations/tr-accounting"
 import type { Prisma } from "@prisma/client"
-import { executeAction, fromZodError, NotFoundError, ConflictError, type ActionResult } from "@/lib/errors"
+import { executeAction, NotFoundError, type ActionResult } from "@/lib/errors"
 import { MODULE, PATHS, ENTITY_TYPE } from "@/lib/constants"
 import { validatedActionWithRole } from "@/lib/action-wrapper"
 
 // ==================== MASRAF MERKEZİ ====================
-type CostCenterWithMapped = Prisma.CostCenterGetPayload<{}>
+type CostCenterWithMapped = Prisma.CostCenterGetPayload<Record<string, never>>
 
 export async function getCostCenters(): Promise<CostCenterWithMapped[]>
 export async function getCostCenters(params: PaginationParams): Promise<PaginatedResult<CostCenterWithMapped>>

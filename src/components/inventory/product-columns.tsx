@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { DataTableColumnHeader } from "@/components/tables/data-table-column-header"
 import { formatCurrency, getStockStatus, cn } from "@/lib/utils"
+import type { AppTranslator } from "@/lib/i18n-types"
 
 export type Product = {
     id: string
@@ -49,7 +50,7 @@ export type Product = {
     createdAt: Date
 }
 
-export const createProductColumns = (t: any, onDelete?: (id: string) => void): ColumnDef<Product>[] => [
+export const createProductColumns = (t: AppTranslator, onDelete?: (id: string) => void): ColumnDef<Product>[] => [
     {
         id: "select",
         header: ({ table }) => (

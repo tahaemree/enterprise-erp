@@ -50,21 +50,33 @@ export const requireAuth = cache(async function requireAuth(): Promise<Authentic
         redirect("/login")
     }
 
-    // Verify tenant is still active (critical for multi-tenancy security)
-    const tenant = await prisma.tenant.findUnique({
-        where: { id: session.user.tenantId },
-        select: { id: true, isActive: true, plan: true, name: true },
+    // SECURITY: Re-read role/permissions AND tenant state from the database on
+    // every request rather than trusting the JWT. The JWT is only refreshed at
+    // login, so without this a revoked/downgraded user would keep their old
+    // privileges until the token expires (up to JWT_MAX_AGE). This is a single
+    // query (memoized per render via React.cache) — same cost as before.
+    const dbUser = await prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: {
+            id: true,
+            email: true,
+            name: true,
+            role: true,
+            permissions: true,
+            tenantId: true,
+            tenant: { select: { id: true, isActive: true, name: true } },
+        },
     })
 
-    if (!tenant) {
+    if (!dbUser || !dbUser.tenant) {
         redirect("/login")
     }
 
-    if (!tenant.isActive) {
+    if (!dbUser.tenant.isActive) {
         logger.warn("Inactive tenant access attempt", {
             module: "auth-utils",
-            tenantId: tenant.id,
-            userId: session.user.id,
+            tenantId: dbUser.tenant.id,
+            userId: dbUser.id,
         })
         throw new TenantInactiveError(
             "Your account has been deactivated. Please contact your administrator."
@@ -73,13 +85,13 @@ export const requireAuth = cache(async function requireAuth(): Promise<Authentic
 
     // tenantName is derived from Tenant.name (not stored on User model)
     return {
-        id: session.user.id,
-        email: session.user.email ?? "",
-        name: session.user.name ?? null,
-        role: session.user.role ?? "USER",
-        tenantId: session.user.tenantId,
-        tenantName: tenant.name,
-        permissions: session.user.permissions ?? [],
+        id: dbUser.id,
+        email: dbUser.email,
+        name: dbUser.name,
+        role: dbUser.role,
+        tenantId: dbUser.tenantId,
+        tenantName: dbUser.tenant.name,
+        permissions: dbUser.permissions ?? [],
     }
 })
 
@@ -95,21 +107,45 @@ export const requireAuth = cache(async function requireAuth(): Promise<Authentic
  * @param requiredRoles - One or more roles that are allowed
  * @throws AuthorizationError if user lacks required role
  */
+/**
+ * Non-throwing role check. Returns true if the user's role meets ANY of the
+ * required roles (by hierarchy). Use this to drive UI (e.g. hiding buttons);
+ * use {@link requireRole} to enforce on the server.
+ */
+export function hasRole(
+    user: Pick<AuthenticatedUser, "role">,
+    ...requiredRoles: UserRole[]
+): boolean {
+    if (requiredRoles.length === 0) return true
+    const userLevel = ROLE_HIERARCHY[user.role] ?? 0
+    return requiredRoles.some((role) => userLevel >= (ROLE_HIERARCHY[role] ?? 0))
+}
+
+/**
+ * Non-throwing permission check mirroring {@link requirePermission}. Returns
+ * true if the user has the permission (ADMIN bypasses; supports `module:all`
+ * and `all:all` wildcards). Use to drive UI visibility.
+ */
+export function can(
+    user: Pick<AuthenticatedUser, "role" | "permissions">,
+    requiredPermission: string
+): boolean {
+    if (user.role === "ADMIN") return true
+    const [module] = requiredPermission.split(":")
+    return Boolean(
+        user.permissions?.includes(requiredPermission) ||
+            user.permissions?.includes(`${module}:all`) ||
+            user.permissions?.includes("all:all")
+    )
+}
+
 export function requireRole(
     user: Pick<AuthenticatedUser, "role">,
     ...requiredRoles: UserRole[]
 ): void {
     if (requiredRoles.length === 0) return
 
-    const userLevel = ROLE_HIERARCHY[user.role] ?? 0
-
-    // Check if user's role meets any of the required roles
-    const hasAccess = requiredRoles.some((role) => {
-        const requiredLevel = ROLE_HIERARCHY[role] ?? 0
-        return userLevel >= requiredLevel
-    })
-
-    if (!hasAccess) {
+    if (!hasRole(user, ...requiredRoles)) {
         throw new AuthorizationError(
             `This action requires one of the following roles: ${requiredRoles.join(", ")}`,
             {

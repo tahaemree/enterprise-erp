@@ -36,7 +36,6 @@ export function TaxTypeForm() {
     const [isSubmitting, setIsSubmitting] = useState(false)
 
     const t = useTranslations("accounting.taxTypes.form")
-    const tc = useTranslations("accounting.taxTypes.columns")
 
     const form = useForm<FormValues>({
         defaultValues: {

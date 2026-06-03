@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { useForm, useFieldArray, type Resolver } from "react-hook-form"
+import { useForm, useFieldArray, useWatch, type Resolver } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useTranslations } from "next-intl"
 import { CalendarIcon, Plus, Trash2, FileText, ArrowRightLeft, Loader2 } from "lucide-react"
@@ -17,7 +17,6 @@ import {
     FormItem,
     FormLabel,
     FormMessage,
-    FormDescription,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -51,10 +50,11 @@ const entryTypeOptions = [
     { value: "CORRECTION", labelKey: "entryTypeCorrection" },
 ] as const
 
-export function AccountEntryForm({ initialData }: { initialData?: any }) {
+type AccountEntryInitialData = Record<string, unknown> & { id?: string }
+
+export function AccountEntryForm({ initialData }: { initialData?: AccountEntryInitialData }) {
     const router = useRouter()
     const t = useTranslations("accounting.accountEntries.form")
-    const tc = useTranslations("accounting.accountEntries.columns")
     const [isSubmitting, setIsSubmitting] = useState(false)
 
     const form = useForm<AccountEntryFormValues>({
@@ -69,7 +69,7 @@ export function AccountEntryForm({ initialData }: { initialData?: any }) {
             ],
         },
     })
-    useEffect(() => { if (initialData) { form.reset(initialData) } }, [initialData, form])
+    useEffect(() => { if (initialData) { form.reset(initialData as AccountEntryFormValues) } }, [initialData, form])
 
 
     const { fields, append, remove } = useFieldArray({
@@ -77,7 +77,7 @@ export function AccountEntryForm({ initialData }: { initialData?: any }) {
         name: "lines",
     })
 
-    const watchLines = form.watch("lines")
+    const watchLines = useWatch({ control: form.control, name: "lines" }) ?? []
 
     const debitTotal = watchLines
         .filter((l) => l.side === "DEBIT")

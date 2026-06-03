@@ -42,7 +42,7 @@ interface Props {
 function LineRow({
     line,
     depth = 0,
-    isPrevious,
+    isPrevious: _isPrevious,
 }: {
     line: IncomeStatementLine
     depth?: number
@@ -80,7 +80,7 @@ function ComparisonRow({
     label,
     current,
     previous,
-    change,
+    change: _change,
     changePercent,
     direction,
 }: {

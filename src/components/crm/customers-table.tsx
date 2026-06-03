@@ -38,7 +38,7 @@ export function CustomersTable({ data, pageCount, pagination }: CustomersTablePr
                 toast.success(t("common.deleteSuccess"))
                 setDeleteId(null)
                 router.refresh()
-            } catch (error) {
+            } catch (_error) {
                 toast.error(t("common.deleteError"))
             } finally {
                 setIsDeleting(false)

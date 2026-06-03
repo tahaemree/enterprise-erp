@@ -1,8 +1,10 @@
 "use client"
 
+import Image from "next/image"
 import { useLocale, useTranslations } from "next-intl"
 import { usePathname, useRouter } from "@/i18n/navigation"
 import { useTransition } from "react"
+import { Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
     DropdownMenu,
@@ -44,9 +46,12 @@ export function LanguageSwitcher() {
                     className="relative hover:bg-accent/50"
                     disabled={isPending}
                 >
-                    <img 
-                        src={`https://cdn.jsdelivr.net/gh/hatscripts/circle-flags@gh-pages/flags/${currentLang?.code || "gb"}.svg`} 
+                    <Image
+                        src={`https://cdn.jsdelivr.net/gh/hatscripts/circle-flags@gh-pages/flags/${currentLang?.code || "gb"}.svg`}
                         alt={currentLang?.english || "English"}
+                        width={20}
+                        height={20}
+                        unoptimized
                         className="w-5 h-5 object-cover rounded-full shadow-sm"
                     />
                     <span className="sr-only">{t("language")}</span>
@@ -64,9 +69,12 @@ export function LanguageSwitcher() {
                                 locale === loc ? "bg-accent font-medium" : ""
                             }`}
                         >
-                            <img 
-                                src={`https://cdn.jsdelivr.net/gh/hatscripts/circle-flags@gh-pages/flags/${lang.code}.svg`} 
+                            <Image
+                                src={`https://cdn.jsdelivr.net/gh/hatscripts/circle-flags@gh-pages/flags/${lang.code}.svg`}
                                 alt={lang.english}
+                                width={20}
+                                height={20}
+                                unoptimized
                                 className="w-5 h-5 object-cover rounded-full shadow-sm"
                             />
                             <div className="flex flex-col">
@@ -75,9 +83,7 @@ export function LanguageSwitcher() {
                                     {lang.english}
                                 </span>
                             </div>
-                            {locale === loc && (
-                                <span className="ml-auto text-xs text-primary">✓</span>
-                            )}
+                            {locale === loc && <Check className="ml-auto h-3.5 w-3.5 text-primary" />}
                         </DropdownMenuItem>
                     )
                 })}

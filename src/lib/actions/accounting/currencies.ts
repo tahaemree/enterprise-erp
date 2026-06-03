@@ -18,7 +18,7 @@ import { MODULE, PATHS } from "@/lib/constants"
 
 const round = (num: number) => Math.round(num * 100) / 100;
 
-type CurrencyWithMapped = Prisma.CurrencyGetPayload<{}>
+type CurrencyWithMapped = Prisma.CurrencyGetPayload<Record<string, never>>
 
 export async function getCurrencies(): Promise<CurrencyWithMapped[]>
 export async function getCurrencies(params: PaginationParams): Promise<PaginatedResult<CurrencyWithMapped>>
@@ -47,7 +47,7 @@ export async function getCurrency(id: string) {
     })
 }
 
-export async function createCurrency(data: CurrencyFormValues): Promise<ActionResult<Prisma.CurrencyGetPayload<{}>>> {
+export async function createCurrency(data: CurrencyFormValues): Promise<ActionResult<Prisma.CurrencyGetPayload<Record<string, never>>>> {
     return executeAction(async () => {
         const user = await requireAuth()
         requireManager(user)

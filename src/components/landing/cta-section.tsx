@@ -3,7 +3,7 @@
 import { motion } from 'motion/react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
-import { ArrowRight, Sparkles } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 
 export default function CtaSection() {
   const t = useTranslations('landing.cta');

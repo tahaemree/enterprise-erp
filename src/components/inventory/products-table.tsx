@@ -18,7 +18,7 @@ interface ProductsTableProps {
     searchQuery?: string
 }
 
-export function ProductsTable({ data, pageCount, currentPage = 1, pageSize = 10, searchQuery }: ProductsTableProps) {
+export function ProductsTable({ data, pageCount, currentPage = 1, pageSize = 10, searchQuery: _searchQuery }: ProductsTableProps) {
     const t = useTranslations()
     const [isPending, startTransition] = useTransition()
     const router = useRouter()
@@ -40,7 +40,7 @@ export function ProductsTable({ data, pageCount, currentPage = 1, pageSize = 10,
                 toast.success(t("common.deleteSuccess"))
                 setDeleteId(null)
                 router.refresh()
-            } catch (error) {
+            } catch (_error) {
                 toast.error(t("common.deleteError"))
             } finally {
                 setIsDeleting(false)
@@ -77,18 +77,20 @@ export function ProductsTable({ data, pageCount, currentPage = 1, pageSize = 10,
                 onConfirm={handleConfirmDelete}
                 isLoading={isDeleting}
             />
-            <DataTable
-            columns={columns}
-            data={data}
-            searchKey="name"
-            searchPlaceholder={t("inventory.products.searchProducts")}
-            manualPagination={true}
-            manualFiltering={true}
-            pageCount={pageCount}
-            pagination={{ pageIndex: currentPage - 1, pageSize }}
-            onPaginationChange={handlePaginationChange}
-            onSearchChange={handleSearchChange}
-        />
+            <div className={isPending ? "opacity-50 pointer-events-none transition-opacity" : ""}>
+                <DataTable
+                    columns={columns}
+                    data={data}
+                    searchKey="name"
+                    searchPlaceholder={t("inventory.products.searchProducts")}
+                    manualPagination={true}
+                    manualFiltering={true}
+                    pageCount={pageCount}
+                    pagination={{ pageIndex: currentPage - 1, pageSize }}
+                    onPaginationChange={handlePaginationChange}
+                    onSearchChange={handleSearchChange}
+                />
+            </div>
         </>
     )
 }

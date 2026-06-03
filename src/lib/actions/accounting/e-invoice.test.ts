@@ -20,7 +20,7 @@ const mockEInvoice = {
     status: "DRAFT",
     senderTaxId: "1234567890",
     senderName: "Test Corp",
-    receiverTaxId: "9876543210",
+    receiverTaxId: "1234567890",
     receiverName: "Müşteri A.Ş.",
     receiverEmail: "musteri@test.com",
     grossTotal: 1000.00,
@@ -47,7 +47,7 @@ const mockEInvoice = {
 
 const validEInvoiceInput = {
     documentType: "INVOICE" as const,
-    receiverTaxId: "9876543210",
+    receiverTaxId: "1234567890",
     receiverName: "Müşteri A.Ş.",
     receiverEmail: "musteri@test.com",
     grossTotal: 1000.00,
@@ -59,16 +59,6 @@ const validEInvoiceInput = {
     issueDate: new Date("2026-06-01"),
     dueDate: new Date("2026-07-01"),
     notes: "Test invoice",
-}
-
-const mockMappedEInvoice = {
-    ...mockEInvoice,
-    grossTotal: 1000.00,
-    vatBaseTotal: 1000.00,
-    vatTotal: 200.00,
-    netTotal: 1200.00,
-    withholdingTotal: 0,
-    exchangeRate: null,
 }
 
 const mockUserWithTenant = {
@@ -280,7 +270,7 @@ describe("e-Invoice — Server Actions", () => {
             expect(mockDb.eInvoice.create).toHaveBeenCalledWith(
                 expect.objectContaining({
                     data: expect.objectContaining({
-                        receiverTaxId: "9876543210",
+                        receiverTaxId: "1234567890",
                         tenantId: "tenant-1",
                         xmlContent: expect.any(String),
                     }),
@@ -454,7 +444,7 @@ describe("e-Invoice — Server Actions", () => {
     describe("checkEInvoiceUser", () => {
         it("should check if a tax ID is an e-invoice user", async () => {
             const { checkEInvoiceUser } = await import("./e-invoice")
-            const result = await checkEInvoiceUser("9876543210")
+            const result = await checkEInvoiceUser("1234567890")
 
             expect(result).toHaveProperty("success")
             expect(result).toHaveProperty("isRegistered")

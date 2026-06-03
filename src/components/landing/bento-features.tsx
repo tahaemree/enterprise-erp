@@ -3,7 +3,7 @@
 import { motion, useInView } from 'motion/react';
 import { useTranslations } from 'next-intl';
 import { useRef, useState } from 'react';
-import { Boxes, GitBranch, Lock, ScanSearch, Users, Workflow } from 'lucide-react';
+import { GitBranch, Lock, ScanSearch, Users, Workflow } from 'lucide-react';
 
 export default function BentoFeatures() {
   const t = useTranslations('landing.features');

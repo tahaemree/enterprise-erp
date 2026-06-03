@@ -1,7 +1,7 @@
 "use client"
 
 import { ColumnDef } from "@tanstack/react-table"
-import { MoreHorizontal, Eye, FileText, Truck, XCircle, Trash2 } from "lucide-react"
+import { MoreHorizontal, Eye, FileText, Truck, Trash2 } from "lucide-react"
 import { Link } from "@/i18n/navigation"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { DataTableColumnHeader } from "@/components/tables/data-table-column-header"
 import { formatCurrency, formatDate } from "@/lib/utils"
+import type { AppTranslator } from "@/lib/i18n-types"
 
 export type Order = {
     id: string
@@ -64,7 +65,7 @@ const paymentStatusConfig: Record<string, { color: string; labelKey: string }> =
     refunded: { color: "outline", labelKey: "finance.orders.refunded" },
 }
 
-export const createOrderColumns = (t: any, onDelete?: (id: string) => void): ColumnDef<Order>[] => [
+export const createOrderColumns = (t: AppTranslator, onDelete?: (id: string) => void): ColumnDef<Order>[] => [
     {
         id: "select",
         header: ({ table }) => (

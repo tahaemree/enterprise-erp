@@ -14,6 +14,9 @@ export default defineConfig({
             "**/types.ts",
             "**/*.d.ts",
             ".next/",
+            // Integration tests need a real database and run via
+            // vitest.integration.config.ts (npm run test:integration).
+            "**/*.integration.test.ts",
         ],
         coverage: {
             provider: "v8",

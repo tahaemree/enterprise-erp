@@ -3,11 +3,9 @@
 import { revalidatePath } from "next/cache"
 import { getTenantPrisma } from "@/lib/prisma"
 import { requireAuth } from "@/lib/auth-utils"
-import { orderSchema, type OrderFormValues } from "@/lib/validations/finance"
-import type { Prisma, OrderStatus } from "@prisma/client"
+import { orderSchema } from "@/lib/validations/finance"
+import type { Prisma } from "@prisma/client"
 import { getPaginationArgs, createPaginatedResult, type PaginationParams, type PaginatedResult } from "@/lib/pagination"
-import { NotFoundError, ConflictError } from "@/lib/errors"
-import { Money } from "@/lib/money"
 import { serializePrisma } from "@/lib/utils"
 import { ENTITY_TYPE, PATHS } from "@/lib/constants"
 import { validatedActionWithRole } from "@/lib/action-wrapper"
@@ -102,13 +100,6 @@ export async function getOrder(id: string) {
     return serializePrisma(order)
 }
 
-// ─── Stock Deduction Interface ───────────────────────────────────────────
-
-interface StockUpdateItem {
-    productId: string
-    quantity: number
-}
-
 /**
  * Atomically creates an order and deducts stock within a Prisma $transaction.
  * This ensures that order creation and stock updates are atomic:
@@ -120,7 +111,7 @@ export const createOrder = validatedActionWithRole(
     ENTITY_TYPE.ORDER,
     PATHS.ORDERS,
     async (ctx) => {
-        const orderService = new OrderService(ctx.db as any, ctx.user.tenantId)
+        const orderService = new OrderService(ctx.db, ctx.user.tenantId)
         return await orderService.createOrder(ctx.parsed)
     },
     (parsed) => `Created order: #${parsed.orderNumber}`
@@ -133,7 +124,7 @@ export const deleteOrder = validatedActionWithRole(
     PATHS.ORDERS,
     async (ctx) => {
         const db = getTenantPrisma(ctx.user.tenantId)
-        const orderService = new OrderService(db as any, ctx.user.tenantId)
+        const orderService = new OrderService(db, ctx.user.tenantId)
         await orderService.deleteOrder(ctx.parsed.id)
 
         revalidatePath(PATHS.PRODUCTS)
@@ -152,7 +143,7 @@ export const updateOrderStatus = validatedActionWithRole(
     ENTITY_TYPE.ORDER,
     PATHS.ORDERS,
     async (ctx) => {
-        const orderService = new OrderService(ctx.db as any, ctx.user.tenantId)
+        const orderService = new OrderService(ctx.db, ctx.user.tenantId)
         await orderService.updateOrderStatus(ctx.parsed.id, ctx.parsed.status)
 
         revalidatePath(PATHS.PRODUCTS)

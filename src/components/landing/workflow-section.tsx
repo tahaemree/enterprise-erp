@@ -33,9 +33,9 @@ export default function WorkflowSection() {
     <section id="workflows" className="relative py-28">
       <div className="mx-auto max-w-[1240px] px-6">
         <SectionHeader
-          eyebrow="How it works"
+          eyebrow={t('title')}
           title="Connect. Compose. Operate."
-          description="A three-stage journey that takes you from disparate systems to a single operating layer — in weeks, not multi-year transformation programs."
+          description={t('subtitle')}
         />
 
         <div className="mt-16 grid grid-cols-1 gap-10 lg:grid-cols-[1fr_1.1fr]">

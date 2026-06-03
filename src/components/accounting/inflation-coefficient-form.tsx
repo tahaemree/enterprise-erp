@@ -61,11 +61,6 @@ export function InflationCoefficientForm() {
         }
     }
 
-    function handleNumberChange(field: { onChange: (value: number | undefined) => void }, value: string) {
-        const num = Number(value)
-        field.onChange(isNaN(num) ? undefined : num)
-    }
-
     return (
         <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">

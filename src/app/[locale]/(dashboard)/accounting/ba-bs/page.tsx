@@ -1,4 +1,5 @@
 import { Link } from "@/i18n/navigation"
+import { RoleGate } from "@/components/auth/role-gate"
 import { getTranslations } from "next-intl/server"
 import { Plus, FileSpreadsheet, FileText, FileCheck, AlertTriangle } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -44,12 +45,14 @@ export default async function BaBsFormsPage({
                         {t("accounting.baBs.description")}
                     </p>
                 </div>
+                <RoleGate allow="MANAGER">
                 <Button asChild>
                     <Link href="/accounting/ba-bs/new">
                         <Plus className="mr-2 h-4 w-4" />
                         {t("accounting.baBs.generateNewForm")}
                     </Link>
                 </Button>
+                </RoleGate>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

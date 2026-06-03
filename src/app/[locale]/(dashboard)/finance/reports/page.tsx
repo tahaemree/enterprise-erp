@@ -1,7 +1,7 @@
 import { Link } from "@/i18n/navigation"
 import { getTranslations } from "next-intl/server"
 import { BarChart3, Scale, Table2 } from "lucide-react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
 const REPORTS = [
     {

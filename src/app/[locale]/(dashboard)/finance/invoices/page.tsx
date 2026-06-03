@@ -1,9 +1,9 @@
 import { Link } from "@/i18n/navigation"
+import { RoleGate } from "@/components/auth/role-gate"
 import { Plus, FileText, Send, CheckCircle, Clock } from "lucide-react"
 import { getTranslations } from "next-intl/server"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { DataTable } from "@/components/tables/data-table"
 import { type Invoice } from "@/components/finance/invoice-columns"
 import { InvoicesTable } from "@/components/finance/invoices-table"
 import { formatCurrency } from "@/lib/utils"
@@ -82,12 +82,14 @@ export default async function InvoicesPage({
     return (
         <div className="space-y-6">
             <div className="flex justify-end">
+                <RoleGate allow="MANAGER">
                 <Button asChild>
                     <Link href="/finance/invoices/new">
                         <Plus className="mr-2 h-4 w-4" />
                         {t("newInvoice")}
                     </Link>
                 </Button>
+                </RoleGate>
             </div>
 
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">

@@ -14,7 +14,7 @@
  * Hata Yönetimi: retry-engine ile entegre
  */
 
-import { submitWithRetry, classifyErrorFromMessage, type RetryResult } from "./retry-engine"
+import { submitWithRetry, type RetryResult } from "./retry-engine"
 import { GibXmlSigner, type SignerConfig } from "./gib-signature"
 
 // ==================== TYPES ====================
@@ -159,6 +159,10 @@ export function buildSoapEnvelope(
         ` xmlns:ef="${GIB_NAMESPACES.eFatura}">`,
         `  <soapenv:Header>`,
         `    <wsse:Security soapenv:mustUnderstand="1">`,
+        `      <wsu:Timestamp wsu:Id="Timestamp-1">`,
+        `        <wsu:Created>${created}</wsu:Created>`,
+        `        <wsu:Expires>${expires}</wsu:Expires>`,
+        `      </wsu:Timestamp>`,
         `      <wsse:UsernameToken wsu:Id="UsernameToken-1">`,
         `        <wsse:Username>${escapeXml(config.username)}</wsse:Username>`,
         `        <wsse:Password Type="${config.passwordType === "PasswordDigest" ? "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordDigest" : "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordText"}">${passwordToken}</wsse:Password>`,
@@ -189,8 +193,6 @@ function buildPasswordDigest(password: string, timestamp: string): string {
     // Şimdilik simüle ediyoruz
     const nonce = generateNonce()
     const raw = nonce + timestamp + password
-    const encoder = new TextEncoder()
-    const data = encoder.encode(raw)
     // Not: crypto.subtle.digest SHA-1 destekliyor
     // Şu an basit Base64 dönüşümü yapıyoruz
     return btoa(raw)
@@ -280,6 +282,18 @@ function buildGetDocumentNumberBody(uuid: string): string {
  * @param operation - Çağrılan operasyon adı
  * @returns Ayrıştırılmış yanıt
  */
+export function parseSoapResponse(
+    soapResponse: string,
+    operation: "sendInvoice" | "cancelInvoice"
+): GibSendInvoiceResponse
+export function parseSoapResponse(
+    soapResponse: string,
+    operation: "getInvoiceStatus"
+): GibStatusResponse
+export function parseSoapResponse(
+    soapResponse: string,
+    operation: "checkUser"
+): GibCheckUserResponse
 export function parseSoapResponse(
     soapResponse: string,
     operation: "sendInvoice" | "getInvoiceStatus" | "checkUser" | "cancelInvoice"

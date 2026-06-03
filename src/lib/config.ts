@@ -11,17 +11,7 @@
  *   config.cache.dashboardTtl     // 300
  */
 
-function envOrDefault(key: string, defaultValue: string): string {
-    return process.env[key] || defaultValue
-}
-
-function envOrThrow(key: string): string {
-    const value = process.env[key]
-    if (!value) {
-        throw new Error(`Required environment variable ${key} is not set.`)
-    }
-    return value
-}
+import { env } from "@/lib/env"
 
 function envInt(key: string, defaultValue: number): number {
     const raw = process.env[key]
@@ -34,13 +24,13 @@ function envInt(key: string, defaultValue: number): number {
 }
 
 export const config = {
-    /** Node environment */
-    env: envOrDefault("NODE_ENV", "development") as "development" | "production" | "test",
-    isProduction: process.env.NODE_ENV === "production",
-    isDevelopment: process.env.NODE_ENV !== "production",
+    /** Node environment (validated via @/lib/env) */
+    env: env.NODE_ENV,
+    isProduction: env.NODE_ENV === "production",
+    isDevelopment: env.NODE_ENV !== "production",
 
     /** Application URL */
-    appUrl: envOrDefault("NEXT_PUBLIC_APP_URL", "http://localhost:3000"),
+    appUrl: env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
 
     /** JWT / Session */
     jwt: {
@@ -75,5 +65,5 @@ export const config = {
     },
 
     /** Logging */
-    logLevel: envOrDefault("LOG_LEVEL", process.env.NODE_ENV === "production" ? "info" : "debug") as "debug" | "info" | "warn" | "error",
+    logLevel: (process.env.LOG_LEVEL || (env.NODE_ENV === "production" ? "info" : "debug")) as "debug" | "info" | "warn" | "error",
 } as const

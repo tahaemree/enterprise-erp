@@ -8,7 +8,7 @@ import type { Prisma } from "@prisma/client"
 
 // ─── Mapped Types ───────────────────────────────────────────────
 
-export type EInvoiceWithMapped = Prisma.EInvoiceGetPayload<{}> & {
+export type EInvoiceWithMapped = Prisma.EInvoiceGetPayload<Record<string, never>> & {
     grossTotal: number
     vatBaseTotal: number
     vatTotal: number

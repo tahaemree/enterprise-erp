@@ -1,21 +1,17 @@
 "use server"
 
-import { revalidatePath } from "next/cache"
 import { getTenantPrisma } from "@/lib/prisma"
-import { requireAuth, requireManager } from "@/lib/auth-utils"
-import logger from "@/lib/logger"
+import { requireAuth } from "@/lib/auth-utils"
 import { getPaginationArgs, createPaginatedResult, type PaginationParams, type PaginatedResult } from "@/lib/pagination"
 import {
     bankAccountSchema,
-    type BankAccountFormValues,
 } from "@/lib/validations/tr-accounting"
 import type { Prisma } from "@prisma/client"
-import { fromZodError, NotFoundError, ConflictError, type ActionResult } from "@/lib/errors"
-import { MODULE, PATHS, ENTITY_TYPE } from "@/lib/constants"
+import { PATHS, ENTITY_TYPE } from "@/lib/constants"
 import { validatedActionWithRole } from "@/lib/action-wrapper"
 
 // ==================== BANKA HESABI ====================
-type BankAccountWithMapped = Prisma.BankAccountGetPayload<{}>
+type BankAccountWithMapped = Prisma.BankAccountGetPayload<Record<string, never>>
 
 export async function getBankAccounts(): Promise<BankAccountWithMapped[]>
 export async function getBankAccounts(params: PaginationParams): Promise<PaginatedResult<BankAccountWithMapped>>

@@ -1,5 +1,4 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
-import { ZodError } from "zod"
 
 // ─── Test Data ──────────────────────────────────────────────────────────
 
@@ -65,6 +64,9 @@ const validOrderInput = {
 // ─── Mocks ──────────────────────────────────────────────────────────────
 
 const mockDb = {
+    customer: {
+        findFirst: vi.fn(),
+    },
     order: {
         create: vi.fn(),
         findMany: vi.fn(),
@@ -118,6 +120,10 @@ vi.mock("next/cache", () => ({
 describe("Orders — Server Actions", () => {
     beforeEach(() => {
         vi.clearAllMocks()
+        mockDb.customer.findFirst.mockResolvedValue(mockCustomer)
+        mockDb.$transaction.mockImplementation(async (cb: (tx: typeof mockDb) => unknown) => cb(mockDb))
+        mockDb.product.updateMany.mockResolvedValue({ count: 1 })
+        mockDb.order.updateMany.mockResolvedValue({ count: 1 })
     })
 
     // ── getOrders ───────────────────────────────────────────────────────
@@ -199,14 +205,8 @@ describe("Orders — Server Actions", () => {
             // Mock product lookup (stock check)
             mockDb.product.findMany.mockResolvedValue([mockProduct])
 
-            // Mock $transaction to execute the callback
-            mockDb.$transaction.mockImplementation(async (cb: (tx: typeof mockDb) => unknown) => {
-                return cb(mockDb)
-            })
-
             // Mock order creation
             mockDb.order.create.mockResolvedValue(mockOrder)
-            mockDb.product.updateMany.mockResolvedValue({ count: 1 })
             mockDb.product.update.mockResolvedValue({ ...mockProduct, quantity: 48 })
 
             const { createOrder } = await import("./orders")
@@ -275,36 +275,29 @@ describe("Orders — Server Actions", () => {
 
     describe("deleteOrder", () => {
         it("should soft-delete an order and restore stock", async () => {
-            mockDb.orderItem.findMany.mockResolvedValue([
-                { productId: "prod-1", quantity: 2 },
-            ])
-            mockDb.$transaction.mockImplementation(async (cb: (tx: typeof mockDb) => unknown) => {
-                return cb(mockDb)
+            mockDb.order.findFirst.mockResolvedValue({
+                ...mockOrder,
+                items: [{ productId: "prod-1", quantity: 2 }],
             })
             mockDb.product.update.mockResolvedValue(mockProduct)
-            mockDb.order.update.mockResolvedValue(mockOrder)
 
             const { deleteOrder } = await import("./orders")
             const result = await deleteOrder({ id: "order-1" })
 
             expect(result.ok).toBe(true)
-            expect(mockDb.orderItem.findMany).toHaveBeenCalledWith({
-                where: { orderId: "order-1" },
-                select: { productId: true, quantity: true },
+            expect(mockDb.order.findFirst).toHaveBeenCalledWith({
+                where: { id: "order-1", tenantId: "tenant-1", deletedAt: null },
+                include: { items: { select: { productId: true, quantity: true } } },
             })
             expect(mockDb.$transaction).toHaveBeenCalled()
-            expect(mockDb.order.update).toHaveBeenCalledWith({
-                where: { id: "order-1" },
+            expect(mockDb.order.updateMany).toHaveBeenCalledWith({
+                where: { id: "order-1", tenantId: "tenant-1", deletedAt: null },
                 data: expect.objectContaining({ deletedAt: expect.any(Date) }),
             })
         })
 
         it("should handle empty order items gracefully", async () => {
-            mockDb.orderItem.findMany.mockResolvedValue([])
-            mockDb.$transaction.mockImplementation(async (cb: (tx: typeof mockDb) => unknown) => {
-                return cb(mockDb)
-            })
-            mockDb.order.update.mockResolvedValue(mockOrder)
+            mockDb.order.findFirst.mockResolvedValue({ ...mockOrder, items: [] })
 
             const { deleteOrder } = await import("./orders")
             const result = await deleteOrder({ id: "order-1" })
@@ -317,24 +310,20 @@ describe("Orders — Server Actions", () => {
 
     describe("updateOrderStatus", () => {
         it("should update order status successfully", async () => {
-            mockDb.order.findUnique.mockResolvedValue({ ...mockOrder, items: [] })
-            mockDb.order.update.mockResolvedValue(mockOrder)
-            mockDb.$transaction.mockImplementation(async (cb: (tx: typeof mockDb) => unknown) => {
-                return cb(mockDb)
-            })
+            mockDb.order.findFirst.mockResolvedValue({ ...mockOrder, items: [] })
 
             const { updateOrderStatus } = await import("./orders")
             const result = await updateOrderStatus({ id: "order-1", status: "SHIPPED" })
 
             expect(result.ok).toBe(true)
-            expect(mockDb.order.update).toHaveBeenCalledWith({
-                where: { id: "order-1" },
+            expect(mockDb.order.updateMany).toHaveBeenCalledWith({
+                where: { id: "order-1", tenantId: "tenant-1", deletedAt: null },
                 data: { status: "SHIPPED" },
             })
         })
 
         it("should return not-found when order does not exist", async () => {
-            mockDb.order.findUnique.mockResolvedValue(null)
+            mockDb.order.findFirst.mockResolvedValue(null)
 
             const { updateOrderStatus } = await import("./orders")
             const result = await updateOrderStatus({ id: "nonexistent", status: "SHIPPED" })

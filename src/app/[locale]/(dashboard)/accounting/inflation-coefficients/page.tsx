@@ -1,4 +1,5 @@
 import { Link } from "@/i18n/navigation"
+import { RoleGate } from "@/components/auth/role-gate"
 import { getTranslations } from "next-intl/server"
 import { Plus, TrendingDown, Calculator, LineChart, Database } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -42,12 +43,14 @@ export default async function InflationCoefficientsPage({
                             {t("applyRevaluation")}
                         </Link>
                     </Button>
+                    <RoleGate allow="MANAGER">
                     <Button asChild>
                         <Link href="/accounting/inflation-coefficients/new">
                             <Plus className="mr-2 h-4 w-4" />
                             {t("newCoefficient")}
                         </Link>
                     </Button>
+                    </RoleGate>
                 </div>
             </div>
 

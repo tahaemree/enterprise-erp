@@ -64,7 +64,7 @@ export function createTaxTypeColumns(t: (key: string) => string): ColumnDef<TaxT
                 let label = config.label
                 try {
                     label = t(`status.${category}`)
-                } catch (e) {
+                } catch (_e) {
                     // fallback to config label
                 }
                 

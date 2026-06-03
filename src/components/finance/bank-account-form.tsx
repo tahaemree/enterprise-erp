@@ -41,7 +41,6 @@ interface BankAccountFormProps {
 
 export function BankAccountForm({ initialData }: BankAccountFormProps) {
     const t = useTranslations("bankAccountForm")
-    const tVal = useTranslations("validation")
     const router = useRouter()
     const [isSubmitting, setIsSubmitting] = useState(false)
 

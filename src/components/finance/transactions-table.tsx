@@ -27,7 +27,7 @@ export function TransactionsTable({ data, pageCount, pagination }: TransactionsT
                 await deleteTransaction({ id })
                 toast.success(t("common.deleteSuccess"))
                 router.refresh()
-            } catch (error) {
+            } catch (_error) {
                 toast.error(t("common.deleteError"))
             }
         })
@@ -54,17 +54,19 @@ export function TransactionsTable({ data, pageCount, pagination }: TransactionsT
     const columns = createTransactionColumns(t, handleDelete)
 
     return (
-        <DataTable
-            columns={columns}
-            data={data}
-            searchKey="description"
-            searchPlaceholder={t("finance.transactions.searchTransactions")}
-            manualPagination={true}
-            manualFiltering={true}
-            pageCount={pageCount}
-            pagination={pagination}
-            onPaginationChange={handlePaginationChange}
-            onSearchChange={handleSearchChange}
-        />
+        <div className={isPending ? "opacity-50 pointer-events-none transition-opacity" : ""}>
+            <DataTable
+                columns={columns}
+                data={data}
+                searchKey="description"
+                searchPlaceholder={t("finance.transactions.searchTransactions")}
+                manualPagination={true}
+                manualFiltering={true}
+                pageCount={pageCount}
+                pagination={pagination}
+                onPaginationChange={handlePaginationChange}
+                onSearchChange={handleSearchChange}
+            />
+        </div>
     )
 }

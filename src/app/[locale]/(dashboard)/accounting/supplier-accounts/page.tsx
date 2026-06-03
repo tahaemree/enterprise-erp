@@ -1,4 +1,5 @@
 import { Link } from "@/i18n/navigation"
+import { RoleGate } from "@/components/auth/role-gate"
 import { Plus, Wallet, AlertTriangle, CheckCircle, Building2 } from "lucide-react"
 import { getTranslations } from "next-intl/server"
 import { Button } from "@/components/ui/button"
@@ -35,17 +36,18 @@ export default async function SupplierAccountsPage({
     const totalBalance = accounts.reduce((sum, a) => sum + a.currentBalance, 0)
     const totalOverdue = accounts.reduce((sum, a) => sum + a.overdueBalance, 0)
     const atRiskAccounts = accounts.filter((a) => a.overdueBalance > 0).length
-    const healthyAccounts = accounts.length - atRiskAccounts
 
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="flex justify-end">
+                <RoleGate allow="MANAGER">
                 <Button asChild>
                     <Link href="/accounting/supplier-accounts/new">
                         <Plus className="mr-2 h-4 w-4" />
                         {t("addAccount")}
                     </Link>
                 </Button>
+                </RoleGate>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

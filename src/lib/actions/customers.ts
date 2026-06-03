@@ -1,18 +1,16 @@
 "use server"
 
-import { revalidatePath } from "next/cache"
 import { getTenantPrisma } from "@/lib/prisma"
-import { requireAuth, requireManager } from "@/lib/auth-utils"
-import logger from "@/lib/logger"
-import { customerSchema, type CustomerFormValues } from "@/lib/validations/crm"
+import { requireAuth } from "@/lib/auth-utils"
+import { customerSchema } from "@/lib/validations/crm"
 import type { Prisma } from "@prisma/client"
 import { getPaginationArgs, createPaginatedResult, type PaginationParams, type PaginatedResult } from "@/lib/pagination"
 import type { Customer } from "@prisma/client"
 import { z } from "zod"
-import { NotFoundError, type ActionResult } from "@/lib/errors"
+import { NotFoundError } from "@/lib/errors"
 import { validatedActionWithRole } from "@/lib/action-wrapper"
 import { serializePrisma } from "@/lib/utils"
-import { ENTITY_TYPE, MODULE, PATHS } from "@/lib/constants"
+import { ENTITY_TYPE, PATHS } from "@/lib/constants"
 
 export async function getCustomers(): Promise<Customer[]>
 export async function getCustomers(params: PaginationParams): Promise<PaginatedResult<Customer>>

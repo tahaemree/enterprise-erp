@@ -1,6 +1,10 @@
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
+import { getLocale } from "next-intl/server"
 import "./globals.css"
+
+/** Locales that render right-to-left. */
+const RTL_LOCALES = new Set(["ar"])
 
 const inter = Inter({
     variable: "--font-inter",
@@ -41,14 +45,21 @@ export const metadata: Metadata = {
     },
 }
 
-export default function RootLayout({
+export default async function RootLayout({
     children,
 }: Readonly<{
     children: React.ReactNode
 }>) {
+    // SSR-correct lang/dir per locale (set by next-intl middleware), so Arabic
+    // renders RTL on first paint with the correct `lang` for SEO + screen
+    // readers — no flash-of-LTR or hydration mismatch.
+    const locale = await getLocale()
+    const dir = RTL_LOCALES.has(locale) ? "rtl" : "ltr"
+
     return (
         <html
-            lang="en"
+            lang={locale}
+            dir={dir}
             suppressHydrationWarning
         >
             <head>

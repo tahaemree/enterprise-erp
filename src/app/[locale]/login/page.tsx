@@ -20,7 +20,6 @@ function LoginForm() {
     
     const router = useRouter()
     const t = useTranslations("marketing.auth")
-    const tCommon = useTranslations("common")
 
     const onSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault()

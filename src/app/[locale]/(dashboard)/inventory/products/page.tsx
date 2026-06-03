@@ -1,4 +1,5 @@
 import { Link } from "@/i18n/navigation"
+import { RoleGate } from "@/components/auth/role-gate"
 import { Plus, Package } from "lucide-react"
 import { getTranslations } from "next-intl/server"
 import { Button } from "@/components/ui/button"
@@ -47,12 +48,14 @@ export default async function ProductsPage({
     return (
         <div className="space-y-6">
             <div className="flex justify-end">
+                <RoleGate allow="MANAGER">
                 <Button asChild>
                     <Link href="/inventory/products/new">
                         <Plus className="mr-2 h-4 w-4" />
                         {t("addProduct")}
                     </Link>
                 </Button>
+                </RoleGate>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

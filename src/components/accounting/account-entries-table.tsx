@@ -1,7 +1,7 @@
 "use client"
 
 import { DataTable } from "@/components/tables/data-table"
-import { createAccountEntryColumns, type AccountEntry } from "./account-entry-columns"
+import { useAccountEntryColumns, type AccountEntry } from "./account-entry-columns"
 
 interface AccountEntriesTableProps {
     data: AccountEntry[]
@@ -9,7 +9,7 @@ interface AccountEntriesTableProps {
 }
 
 export function AccountEntriesTable({ data, onDelete }: AccountEntriesTableProps) {
-    const columns = createAccountEntryColumns(onDelete)
+    const columns = useAccountEntryColumns(onDelete)
 
     return (
         <DataTable

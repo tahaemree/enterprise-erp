@@ -32,7 +32,9 @@ import { checkNoteSchema, type CheckNoteFormValues } from "@/lib/validations/fin
 import { createCheckNote} from "@/lib/actions/check-notes"
 import { useTranslations } from "next-intl"
 
-export function CheckNoteForm({ initialData }: { initialData?: any }) {
+type CheckNoteInitialData = Record<string, unknown> & { id?: string }
+
+export function CheckNoteForm({ initialData }: { initialData?: CheckNoteInitialData }) {
     const t = useTranslations("checkNoteForm")
     const router = useRouter()
     const [isPending, setIsPending] = useState(false)
@@ -56,7 +58,7 @@ export function CheckNoteForm({ initialData }: { initialData?: any }) {
             notes: "",
         },
     })
-    useEffect(() => { if (initialData) { form.reset(initialData) } }, [initialData, form])
+    useEffect(() => { if (initialData) { form.reset(initialData as CheckNoteFormValues) } }, [initialData, form])
 
 
     async function onSubmit(data: CheckNoteFormValues) {
@@ -74,8 +76,8 @@ export function CheckNoteForm({ initialData }: { initialData?: any }) {
                     toast.error(result.error || t("createError"))
                 }
             }
-        } catch (error: any) {
-            toast.error(error.message || t("createError"))
+        } catch (error: unknown) {
+            toast.error(error instanceof Error ? error.message : t("createError"))
         } finally {
             setIsPending(false)
         }

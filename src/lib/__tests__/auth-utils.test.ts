@@ -1,9 +1,11 @@
-import { describe, it, expect, beforeEach, vi } from "vitest"
+import { describe, it, expect, vi } from "vitest"
 import {
     requireRole,
     requireAdmin,
     requireManager,
     verifyTenantAccess,
+    hasRole,
+    can,
 } from "@/lib/auth-utils"
 import { AuthorizationError } from "@/lib/errors"
 import type { UserRole } from "@prisma/client"
@@ -29,6 +31,47 @@ vi.mock("@/lib/auth", () => ({
 }))
 
 type MockUser = { role: UserRole }
+
+describe("hasRole (non-throwing, hierarchy-aware)", () => {
+    it("returns true when the user's role meets the requirement by hierarchy", () => {
+        expect(hasRole({ role: "ADMIN" }, "MANAGER")).toBe(true)
+        expect(hasRole({ role: "MANAGER" }, "MANAGER")).toBe(true)
+        expect(hasRole({ role: "MANAGER" }, "USER")).toBe(true)
+    })
+
+    it("returns false when the user's role is below the requirement", () => {
+        expect(hasRole({ role: "USER" }, "MANAGER")).toBe(false)
+        expect(hasRole({ role: "VIEWER" }, "USER")).toBe(false)
+    })
+
+    it("returns true when no role is required", () => {
+        expect(hasRole({ role: "VIEWER" })).toBe(true)
+    })
+
+    it("returns true if ANY of several required roles is satisfied", () => {
+        expect(hasRole({ role: "MANAGER" }, "ADMIN", "MANAGER")).toBe(true)
+    })
+})
+
+describe("can (non-throwing permission check)", () => {
+    it("grants ADMIN everything regardless of explicit permissions", () => {
+        expect(can({ role: "ADMIN", permissions: [] }, "finance:write")).toBe(true)
+    })
+
+    it("grants when the exact permission is present", () => {
+        expect(can({ role: "USER", permissions: ["finance:write"] }, "finance:write")).toBe(true)
+    })
+
+    it("grants via module wildcard and global wildcard", () => {
+        expect(can({ role: "USER", permissions: ["finance:all"] }, "finance:write")).toBe(true)
+        expect(can({ role: "USER", permissions: ["all:all"] }, "crm:read")).toBe(true)
+    })
+
+    it("denies when the permission is missing", () => {
+        expect(can({ role: "USER", permissions: ["crm:read"] }, "finance:write")).toBe(false)
+        expect(can({ role: "VIEWER", permissions: [] }, "finance:write")).toBe(false)
+    })
+})
 
 describe("requireRole", () => {
     it("should not throw when user has exactly the required role", () => {

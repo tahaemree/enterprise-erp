@@ -1,8 +1,5 @@
 import type { NextAuthConfig } from "next-auth"
 import { routing } from "@/i18n/routing"
-import { createLogger } from "@/lib/logger"
-
-const logger = createLogger("auth-config")
 
 export const JWT_MAX_AGE = +(process.env.JWT_MAX_AGE || "86400") // Default: 24 hours
 
@@ -34,7 +31,7 @@ function isDashboardRoute(pathname: string): boolean {
 }
 
 /**
- * Extract locale from a locale-prefixed pathname (e.g., /en/dashboard → "en")
+ * Extract locale from a locale-prefixed pathname (e.g., /en/dashboard -> "en")
  */
 function extractLocale(pathname: string): string {
     for (const locale of routing.locales) {

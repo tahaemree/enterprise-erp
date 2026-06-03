@@ -90,7 +90,8 @@
     "editAccount": "تعديل الحساب",
     "iban": "IBAN",
     "currencySymbol": "ر.س",
-    "select": "اختر..."
+    "select": "اختر...",
+    "skipToContent": "تخطَّ إلى المحتوى الرئيسي"
   },
   "validation": {
     "required": "هذا الحقل مطلوب",
@@ -183,7 +184,14 @@
       "openSource": "مفتوح المصدر",
       "support": "الدعم"
     },
-    "footer": "© 2024 Deftra. تم بناؤه باستخدام Next.js و Prisma و PostgreSQL."
+    "footer": "© 2024 Deftra. تم بناؤه باستخدام Next.js و Prisma و PostgreSQL.",
+    "nav": {
+      "features": "المميزات",
+      "customers": "العملاء",
+      "pricing": "الأسعار",
+      "login": "تسجيل الدخول",
+      "signup": "ابدأ مجانًا"
+    }
   },
   "login": {
     "title": "Deftra",
@@ -377,7 +385,44 @@
       "goToDespatch": "أذونات الشحن",
       "newEinvoice": "فاتورة إلكترونية جديدة",
       "title": "e-Fatura",
-      "description": "e-Faturaları yönetin."
+      "description": "e-Faturaları yönetin.",
+      "form": {
+        "submit": "إنشاء مستند إلكتروني",
+        "creating": "جارٍ الإنشاء...",
+        "cancel": "إلغاء",
+        "createSuccess": "تم إنشاء المستند الإلكتروني بنجاح!",
+        "createError": "فشل إنشاء المستند الإلكتروني",
+        "tabInvoiceDesc": "فاتورة إلكترونية قياسية (ملف الفاتورة التجارية). تُعدّ للإرسال إلى GİB.",
+        "tabArchiveDesc": "فاتورة الأرشيف الإلكتروني. البريد الإلكتروني للمستلم مطلوب. يمكن إرسالها بصيغة PDF عبر البريد.",
+        "tabDespatchDesc": "إشعار التسليم الإلكتروني. يُستخدم لحركات البضائع.",
+        "receiverInfo": "معلومات المستلم",
+        "financialDetails": "التفاصيل المالية",
+        "receiverName": "اسم المستلم / الشركة",
+        "receiverNamePlaceholder": "اسم المستلم / العنوان",
+        "receiverTaxId": "الرقم الضريبي للمستلم (VKN/TCKN)",
+        "receiverEmail": "بريد المستلم الإلكتروني (مطلوب للأرشيف الإلكتروني)",
+        "receiverEmailPlaceholder": "fatura@alici.com",
+        "profile": "الملف",
+        "selectProfile": "اختر الملف",
+        "profileTemel": "فاتورة أساسية",
+        "profileTicari": "فاتورة تجارية",
+        "profileEArsiv": "فاتورة الأرشيف الإلكتروني",
+        "profileIhracat": "فاتورة تصدير",
+        "grossTotal": "الإجمالي الكلي",
+        "vatBase": "وعاء ضريبة القيمة المضافة",
+        "vatTotal": "إجمالي ضريبة القيمة المضافة",
+        "netTotal": "الصافي",
+        "withholdingTotal": "إجمالي الاستقطاع",
+        "withholdingHint": "اترك 0 إذا لم يكن هناك استقطاع",
+        "currency": "العملة",
+        "selectCurrency": "اختر العملة",
+        "issueDate": "تاريخ الإصدار",
+        "dueDate": "تاريخ الاستحقاق (اختياري)",
+        "exchangeRate": "سعر الصرف (اختياري)",
+        "exchangeRateHint": "اتركه فارغًا لليرة التركية",
+        "notes": "ملاحظات (اختياري)",
+        "notesPlaceholder": "ملاحظات الفاتورة، شروط خاصة..."
+      }
     },
     "despatchAdvice": {
       "title": "أذونات الشحن",
@@ -1052,6 +1097,7 @@
       "receiverName": "المستلم",
       "netTotal": "الصافي الإجمالي",
       "issueDate": "تاريخ الإصدار",
+      "status": "الحالة",
       "draft": "مسودة",
       "sent": "أرسل إلى GİB",
       "accepted": "مقبول",
@@ -1182,7 +1228,9 @@
       "email": "البريد الإلكتروني",
       "emailPlaceholder": "admin@example.com",
       "phone": "رقم الهاتف",
-      "phonePlaceholder": "+966 555 123 4567"
+      "phonePlaceholder": "+966 555 123 4567",
+      "name": "الاسم",
+      "namePlaceholder": "محمد أحمد"
     },
     "companyInfo": {
       "title": "معلومات الشركة",
@@ -1251,7 +1299,10 @@
       "lowStockWarningsDesc": "تنبيهات عندما تنخفض عناصر المخزون عن الحد الأدنى.",
       "systemUpdates": "تحديثات النظام",
       "systemUpdatesDesc": "إشعارات حول صيانة النظام وتحديثاته."
-    }
+    },
+    "error": "فشل حفظ الإعدادات",
+    "profileRequired": "الاسم والبريد الإلكتروني مطلوبان",
+    "passwordMismatch": "كلمتا المرور غير متطابقتين"
   },
   "activityLog": {
     "title": "سجل النشاط",
@@ -1540,7 +1591,16 @@
     "creating": "جاري الإنشاء...",
     "createOrder": "إنشاء طلب",
     "createSuccess": "تم إنشاء الطلب بنجاح!",
-    "createError": "فشل إنشاء الطلب"
+    "createError": "فشل إنشاء الطلب",
+    "pricing": "التسعير",
+    "taxRate": "نسبة الضريبة (%)",
+    "tax": "ضريبة",
+    "shipping": "الشحن",
+    "discount": "خصم",
+    "discountType": "نوع الخصم",
+    "discountValue": "قيمة الخصم",
+    "discountFixed": "ثابت",
+    "discountPercentage": "نسبة مئوية"
   },
   "transactionForm": {
     "title": "إضافة معاملة",
@@ -2087,5 +2147,195 @@
       "nameLabel": "Full Name",
       "createAccount": "Create Account"
     }
+  },
+  "dataTable": {
+    "search": "بحث...",
+    "view": "عرض",
+    "toggleColumns": "تبديل الأعمدة",
+    "export": "تصدير",
+    "noResults": "لم يتم العثور على نتائج.",
+    "emptyTitle": "لا توجد سجلات",
+    "emptyHintCreate": "يمكنك البدء بإنشاء سجل جديد.",
+    "emptyHintSearch": "حاول تعديل معايير البحث.",
+    "rowsPerPage": "صفوف لكل صفحة",
+    "page": "صفحة",
+    "of": "من",
+    "selected": "محدد.",
+    "showing": "عرض",
+    "results": "نتائج.",
+    "clearSelection": "إلغاء التحديد",
+    "clearSearch": "مسح البحث",
+    "firstPage": "الصفحة الأولى",
+    "prevPage": "الصفحة السابقة",
+    "nextPage": "الصفحة التالية",
+    "lastPage": "الصفحة الأخيرة"
+  },
+  "zod": {
+    "errors": {
+      "invalid_type": "المتوقع {{expected}}، المستلم {{received}}",
+      "invalid_type_received_undefined": "مطلوب",
+      "invalid_type_received_null": "مطلوب",
+      "invalid_literal": "قيمة حرفية غير صالحة، المتوقع {{expected}}",
+      "unrecognized_keys": "عنصر (عناصر) غير معروف في الكائن: {{- keys}}",
+      "invalid_union": "مدخل غير صالح",
+      "invalid_union_discriminator": "قيمة مميزة غير صالحة. المتوقع {{- options}}",
+      "invalid_enum_value": "قيمة تعداد غير صالحة. المتوقع {{- options}}، المستلم '{{received}}'",
+      "invalid_arguments": "معاملات الدالة غير صالحة",
+      "invalid_return_type": "نوع إرجاع دالة غير صالح",
+      "invalid_date": "تاريخ غير صالح",
+      "custom": "مدخل غير صالح",
+      "invalid_intersection_types": "تعذر دمج نتائج التقاطع",
+      "not_multiple_of": "يجب أن يكون الرقم من مضاعفات {{multipleOf}}",
+      "not_finite": "يجب ان يكون العدد محدود",
+      "invalid_string": {
+        "email": "غير صالح {{validation}}",
+        "url": "غير صالح {{validation}}",
+        "uuid": "غير صالح {{validation}}",
+        "cuid": "غير صالح {{validation}}",
+        "regex": "غير صالح",
+        "datetime": "غير صالح {{validation}}",
+        "startsWith": "إدخال غير صالح: يجب أن يبدأ بـ {{startsWith}}",
+        "endsWith": "إدخال غير صالح: يجب أن ينتهي بـ {{endsWith}}"
+      },
+      "too_small": {
+        "array": {
+          "exact": "يجب أن تحتوي المصفوفة على {{minimum}} عنصر (عناصر)",
+          "inclusive": "يجب أن تحتوي المصفوفة على {{minimum}} عنصر (عناصر) على الأقل",
+          "not_inclusive": "يجب أن تحتوي المصفوفة على أكثر من {{minimum}} عنصر (عناصر)"
+        },
+        "string": {
+          "exact": "يجب أن تحتوي السلسلة على {{minimum}} حرف (أحرف)",
+          "inclusive": "يجب أن تحتوي السلسلة على {{minimum}} حرف (أحرف) على الأقل",
+          "not_inclusive": "يجب أن تحتوي السلسلة على أكثر من {{minimum}} حرف (أحرف)"
+        },
+        "number": {
+          "exact": "يجب أن يكون الرقم {{minimum}}",
+          "inclusive": "يجب أن يكون الرقم أكبر من أو يساوي {{minimum}}",
+          "not_inclusive": "يجب أن يكون الرقم أكبر من {{minimum}}"
+        },
+        "set": {
+          "exact": "مدخل غير صالح",
+          "inclusive": "مدخل غير صالح",
+          "not_inclusive": "مدخل غير صالح"
+        },
+        "date": {
+          "exact": "يجب أن يكون التاريخ {{- minimum, datetime}}",
+          "inclusive": "يجب أن يكون التاريخ أكبر من أو يساوي {{- minimum, datetime}}",
+          "not_inclusive": "يجب أن يكون التاريخ أكبر من {{- minimum, datetime}}"
+        }
+      },
+      "too_big": {
+        "array": {
+          "exact": "يجب أن تحتوي المصفوفة على {{maximum}} عنصر (عناصر)",
+          "inclusive": "يجب أن تحتوي المصفوفة على {{maximum}} عنصر (عناصر) كحد أقصى",
+          "not_inclusive": "يجب أن تحتوي المصفوفة على أقل من {{maximum}} عنصر (عناصر)"
+        },
+        "string": {
+          "exact": "يجب أن تحتوي السلسلة على {{maximum}} حرف (أحرف)",
+          "inclusive": "يجب أن تحتوي السلسلة على {{maximum}} حرف (أحرف) كحد أقصى",
+          "not_inclusive": "يجب أن تحتوي السلسلة على أقل من {{maximum}} حرف (أحرف)"
+        },
+        "number": {
+          "exact": "يجب أن يكون الرقم {{maximum}}",
+          "inclusive": "يجب أن يكون الرقم أقل من أو يساوي {{maximum}}",
+          "not_inclusive": "يجب أن يكون الرقم أقل من {{maximum}}"
+        },
+        "set": {
+          "exact": "مدخل غير صالح",
+          "inclusive": "مدخل غير صالح",
+          "not_inclusive": "مدخل غير صالح"
+        },
+        "date": {
+          "exact": "يجب أن يكون التاريخ {{- maximum, datetime}}",
+          "inclusive": "يجب أن يكون التاريخ أصغر من أو يساوي {{- maximum, datetime}}",
+          "not_inclusive": "يجب أن يكون التاريخ أصغر من {{- maximum, datetime}}"
+        }
+      }
+    },
+    "validations": {
+      "email": "البريد الإلكتروني",
+      "url": "الرابط",
+      "uuid": "uuid",
+      "cuid": "cuid",
+      "regex": "التعبير النمطي",
+      "datetime": "التاريخ والوقت"
+    },
+    "types": {
+      "function": "دالة",
+      "number": "رقم",
+      "string": "سلسلة",
+      "nan": "مدخل غير رقمي",
+      "integer": "عدد صحيح",
+      "float": "عدد عشري",
+      "boolean": "قيمة منطقية",
+      "date": "تاريخ",
+      "bigint": "عدد صحيح كبير",
+      "undefined": "غير معرف",
+      "symbol": "رمز",
+      "null": "لا شيء",
+      "array": "مصفوفة",
+      "object": "كائن",
+      "unknown": "غير معروف",
+      "promise": "برومس",
+      "void": "بدون قيمة",
+      "never": "ابدا",
+      "map": "ماب",
+      "set": "مجموعة"
+    }
+  },
+  "dateRange": {
+    "thisMonth": "هذا الشهر",
+    "lastMonth": "الشهر الماضي",
+    "thisQuarter": "هذا الربع",
+    "lastQuarter": "الربع الماضي",
+    "thisYear": "هذا العام",
+    "lastYear": "العام الماضي",
+    "last30Days": "آخر 30 يومًا",
+    "last90Days": "آخر 90 يومًا"
+  },
+  "pivot": {
+    "category": "الفئة",
+    "type": "النوع",
+    "amount": "المبلغ",
+    "date": "الشهر",
+    "company": "الشركة",
+    "customerStatus": "حالة العميل",
+    "orderTotal": "إجمالي الطلب",
+    "productCategory": "فئة المنتج",
+    "transactionType": "نوع المعاملة"
+  },
+  "columns": {
+    "firstName": "الاسم الأول",
+    "lastName": "اسم العائلة",
+    "email": "البريد الإلكتروني",
+    "phone": "الهاتف",
+    "company": "الشركة",
+    "status": "الحالة",
+    "source": "المصدر",
+    "totalSpent": "إجمالي الإنفاق",
+    "orderCount": "عدد الطلبات",
+    "createdAt": "تاريخ الإنشاء",
+    "actions": "الإجراءات",
+    "amount": "المبلغ",
+    "date": "التاريخ",
+    "type": "النوع",
+    "name": "الاسم",
+    "taxId": "الرقم الضريبي",
+    "grossTotal": "الإجمالي الكلي",
+    "netTotal": "الصافي",
+    "description": "الوصف",
+    "category": "الفئة",
+    "isActive": "نشط؟",
+    "rate": "النسبة",
+    "code": "الرمز",
+    "title": "العنوان",
+    "receiverName": "اسم المستلم",
+    "invoiceNumber": "رقم المستند",
+    "formType": "نوع النموذج",
+    "period": "الفترة",
+    "totalDocuments": "المستندات",
+    "totalAmount": "المبلغ الإجمالي",
+    "submittedAt": "تاريخ التقديم",
+    "select": "تحديد"
   }
 }

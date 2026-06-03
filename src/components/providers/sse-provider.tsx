@@ -8,7 +8,7 @@ import { createLogger } from "@/lib/logger"
 const logger = createLogger("sse")
 
 export function SseProvider({ children }: { children: React.ReactNode }) {
-    const { data: session, status } = useSession()
+    const { status } = useSession()
 
     useEffect(() => {
         if (status !== "authenticated") return

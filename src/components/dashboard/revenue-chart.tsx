@@ -22,9 +22,8 @@ import {
     CardTitle,
 } from "@/components/ui/card"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Button } from "@/components/ui/button"
 import { TrendingUp, TrendingDown, DollarSign } from "lucide-react"
-import { cn, formatCurrency } from "@/lib/utils"
+import { formatCurrency } from "@/lib/utils"
 
 interface RevenueChartProps {
     data?: { month: string; revenue: number; expenses?: number }[]

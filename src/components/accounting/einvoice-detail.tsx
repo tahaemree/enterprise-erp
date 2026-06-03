@@ -19,8 +19,6 @@ import {
     Clock,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { formatCurrency, formatDate } from "@/lib/utils"
@@ -99,7 +97,7 @@ export function EInvoiceDetail({ invoice, onBack, onSubmit, onCancel, onRetry }:
             await onSubmit(invoice.id)
             toast.success("Submitted to GİB successfully")
             router.refresh()
-        } catch (error) {
+        } catch (_error) {
             toast.error("Failed to submit to GİB")
         } finally {
             setIsSubmitting(false)
@@ -113,7 +111,7 @@ export function EInvoiceDetail({ invoice, onBack, onSubmit, onCancel, onRetry }:
             await onCancel(invoice.id)
             toast.success("Invoice cancelled")
             router.refresh()
-        } catch (error) {
+        } catch (_error) {
             toast.error("Failed to cancel invoice")
         } finally {
             setIsSubmitting(false)
@@ -127,7 +125,7 @@ export function EInvoiceDetail({ invoice, onBack, onSubmit, onCancel, onRetry }:
             await onRetry(invoice.id)
             toast.success("Retrying submission...")
             router.refresh()
-        } catch (error) {
+        } catch (_error) {
             toast.error("Failed to retry submission")
         } finally {
             setIsSubmitting(false)

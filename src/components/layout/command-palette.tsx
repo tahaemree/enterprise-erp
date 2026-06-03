@@ -12,12 +12,13 @@ import {
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
 import { Command } from "cmdk"
+import type { ComponentType } from "react"
 
 interface CommandItem {
     id: string
     label: string
     href: string
-    icon: any
+    icon: ComponentType<{ className?: string }>
     keywords?: string[]
 }
 

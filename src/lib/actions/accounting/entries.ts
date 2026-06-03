@@ -1,23 +1,18 @@
 "use server"
 
-import { revalidatePath } from "next/cache"
 import { getTenantPrisma } from "@/lib/prisma"
-import { requireAuth, requireManager } from "@/lib/auth-utils"
-import logger from "@/lib/logger"
-import crypto from "crypto"
+import { requireAuth } from "@/lib/auth-utils"
 import { getPaginationArgs, createPaginatedResult, type PaginationParams, type PaginatedResult } from "@/lib/pagination"
 import {
     accountEntrySchema,
-    type AccountEntryFormValues,
 } from "@/lib/validations/tr-accounting"
 import type { Prisma } from "@prisma/client"
-import { fromZodError, NotFoundError, ConflictError, type ActionResult } from "@/lib/errors"
-import { MODULE, PATHS, ENTITY_TYPE } from "@/lib/constants"
+import { PATHS, ENTITY_TYPE } from "@/lib/constants"
 import { validatedActionWithRole } from "@/lib/action-wrapper"
 
 // ==================== MUHASEBE FİŞİ ====================
 
-export type AccountEntryWithMapped = Omit<Prisma.AccountEntryGetPayload<{ include: { lines: true } }>, 'lines'> & { lines: Array<Omit<Prisma.AccountEntryLineGetPayload<{}>, 'amount'> & { amount: number }> }
+export type AccountEntryWithMapped = Omit<Prisma.AccountEntryGetPayload<{ include: { lines: true } }>, 'lines'> & { lines: Array<Omit<Prisma.AccountEntryLineGetPayload<Record<string, never>>, 'amount'> & { amount: number }> }
 
 export async function getAccountEntries(): Promise<AccountEntryWithMapped[]>
 export async function getAccountEntries(params: PaginationParams): Promise<PaginatedResult<AccountEntryWithMapped>>

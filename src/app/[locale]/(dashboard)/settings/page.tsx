@@ -30,13 +30,11 @@ import {
 } from "@/components/ui/tabs"
 
 import { Separator } from "@/components/ui/separator"
-import { useTheme } from "@teispace/next-themes"
 import { toast } from "sonner"
 import { updateProfile } from "@/lib/actions/users"
 
 export default function SettingsPage() {
     const t = useTranslations('settings')
-    const { theme, setTheme } = useTheme()
     const [isSaving, setIsSaving] = useState(false)
 
     const [name, setName] = useState("")

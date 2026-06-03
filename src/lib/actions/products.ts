@@ -1,8 +1,7 @@
 "use server"
 
-import { revalidatePath, unstable_cache } from "next/cache"
 import { getTenantPrisma, basePrisma, isUniqueConstraintError } from "@/lib/prisma"
-import { requireAuth, requireManager } from "@/lib/auth-utils"
+import { requireAuth } from "@/lib/auth-utils"
 import { productSchema } from "@/lib/validations/inventory"
 import { z } from "zod"
 import type { Prisma } from "@prisma/client"

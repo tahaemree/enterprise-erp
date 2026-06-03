@@ -52,7 +52,7 @@ export function EmployeesTable({ data, pageCount, pagination }: EmployeesTablePr
                 toast.success(t("employees.deleteSuccess"))
                 setDeleteId(null)
                 router.refresh()
-            } catch (error) {
+            } catch (_error) {
                 toast.error(t("employees.deleteError"))
             } finally {
                 setIsDeleting(false)
@@ -158,19 +158,21 @@ export function EmployeesTable({ data, pageCount, pagination }: EmployeesTablePr
                 onConfirm={handleConfirmDelete}
                 isLoading={isDeleting}
             />
-            <DataTable
-                columns={columns}
-                data={filteredData}
-                searchKey="name"
-                searchPlaceholder={t("employees.searchEmployees")}
-                toolbar={statusToolbar}
-                manualPagination={true}
-                manualFiltering={true}
-                pageCount={pageCount}
-                pagination={pagination}
-                onPaginationChange={handlePaginationChange}
-                onSearchChange={handleSearchChange}
-            />
+            <div className={isPending ? "opacity-50 pointer-events-none transition-opacity" : ""}>
+                <DataTable
+                    columns={columns}
+                    data={filteredData}
+                    searchKey="name"
+                    searchPlaceholder={t("employees.searchEmployees")}
+                    toolbar={statusToolbar}
+                    manualPagination={true}
+                    manualFiltering={true}
+                    pageCount={pageCount}
+                    pagination={pagination}
+                    onPaginationChange={handlePaginationChange}
+                    onSearchChange={handleSearchChange}
+                />
+            </div>
         </>
     )
 }

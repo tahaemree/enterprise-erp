@@ -15,6 +15,7 @@ import {
 import { Link } from "@/i18n/navigation"
 import { format } from "date-fns"
 import { formatCurrency } from "@/lib/utils"
+import type { AppTranslator } from "@/lib/i18n-types"
 
 export type CheckNoteRow = {
     id: string
@@ -28,7 +29,7 @@ export type CheckNoteRow = {
     status: string
 }
 
-export function createCheckNoteColumns(t: any): ColumnDef<CheckNoteRow>[] {
+export function createCheckNoteColumns(t: AppTranslator): ColumnDef<CheckNoteRow>[] {
     return [
         {
             accessorKey: "type",

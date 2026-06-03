@@ -6,6 +6,7 @@ import { DataTable } from "@/components/tables/data-table"
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
 import { formatCurrency } from "@/lib/utils"
+import type { ColumnDef } from "@tanstack/react-table"
 
 interface Lead {
     id: string
@@ -36,8 +37,6 @@ interface PipelineTableProps {
 
 export function PipelineTable({
     data,
-    title,
-    description,
     addLeadText,
     totalLeadsText,
     qualifiedText,
@@ -51,11 +50,11 @@ export function PipelineTable({
 }: PipelineTableProps) {
     const t = useTranslations()
 
-    const pipelineColumns = [
+    const pipelineColumns: ColumnDef<Lead>[] = [
         {
             accessorKey: "firstName",
             header: t("pipeline.name") || "Name",
-            cell: ({ row }: any) => (
+            cell: ({ row }) => (
                 <div className="font-medium">
                     {row.original.firstName} {row.original.lastName}
                 </div>
@@ -64,14 +63,14 @@ export function PipelineTable({
         {
             accessorKey: "company",
             header: t("pipeline.company") || "Company",
-            cell: ({ row }: any) => (
+            cell: ({ row }) => (
                 <div className="text-muted-foreground">{row.getValue("company") || "—"}</div>
             ),
         },
         {
             accessorKey: "status",
             header: t("pipeline.status") || "Status",
-            cell: ({ row }: any) => {
+            cell: ({ row }) => {
                 const status = row.getValue("status") as string
                 const statusColors: Record<string, string> = {
                     LEAD: "bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300",
@@ -90,14 +89,14 @@ export function PipelineTable({
         {
             accessorKey: "email",
             header: t("pipeline.email") || "Email",
-            cell: ({ row }: any) => (
+            cell: ({ row }) => (
                 <div className="text-muted-foreground">{row.getValue("email") || "—"}</div>
             ),
         },
         {
             accessorKey: "totalSpent",
             header: t("pipeline.potentialValue") || "Value",
-            cell: ({ row }: any) => {
+            cell: ({ row }) => {
                 const value = row.getValue("totalSpent") as number
                 return <div className="font-medium">{formatCurrency(value)}</div>
             },
@@ -105,7 +104,7 @@ export function PipelineTable({
         {
             accessorKey: "createdAt",
             header: t("pipeline.created") || "Created",
-            cell: ({ row }: any) => {
+            cell: ({ row }) => {
                 const date = row.getValue("createdAt") as Date
                 return <div className="text-muted-foreground">{new Date(date).toLocaleDateString()}</div>
             },

@@ -10,13 +10,11 @@ import {
     type SupplierAccountFormValues,
 } from "@/lib/validations/tr-accounting"
 import type { Prisma } from "@prisma/client"
-import { executeAction, fromZodError, NotFoundError, ConflictError, type ActionResult } from "@/lib/errors"
+import { executeAction, fromZodError, type ActionResult } from "@/lib/errors"
 import { MODULE, PATHS } from "@/lib/constants"
 
 // ==================== TEDARİKÇİ CARİ HESAP ====================
 type SupplierAccountWithMapped = Omit<Prisma.SupplierAccountGetPayload<{ include: { supplier: true } }>, 'currentBalance' | 'overdueBalance' | 'riskLimit'> & { currentBalance: number; overdueBalance: number; riskLimit: number }
-
-type AccountEntryWithMapped = Omit<Prisma.AccountEntryGetPayload<{ include: { lines: true } }>, 'lines'> & { lines: Array<Omit<Prisma.AccountEntryLineGetPayload<{}>, 'amount'> & { amount: number }> }
 
 export async function getSupplierAccounts(): Promise<SupplierAccountWithMapped[]>
 export async function getSupplierAccounts(params: PaginationParams): Promise<PaginatedResult<SupplierAccountWithMapped>>
@@ -45,7 +43,7 @@ export async function getSupplierAccounts(params?: PaginationParams) {
     return createPaginatedResult(data.map(mapFn), total, params)
 }
 
-export async function createSupplierAccount(supplierId: string, data: SupplierAccountFormValues) : Promise<ActionResult<Prisma.SupplierAccountGetPayload<{}>>> {
+export async function createSupplierAccount(supplierId: string, data: SupplierAccountFormValues) : Promise<ActionResult<Prisma.SupplierAccountGetPayload<Record<string, never>>>> {
     return executeAction(async () => {
     
         const user = await requireAuth()
@@ -65,4 +63,3 @@ export async function createSupplierAccount(supplierId: string, data: SupplierAc
     
     })
 }
-

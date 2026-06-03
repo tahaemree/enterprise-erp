@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
+import { describe, it, expect } from "vitest"
 import {
     GibXmlSigner,
     computeDocumentHash,
@@ -6,7 +6,6 @@ import {
     parseP12,
     validateP12,
     GibSignatureError,
-    type SignerConfig,
     type CertificateInfo,
 } from "@/lib/services/gib-signature"
 

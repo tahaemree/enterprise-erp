@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { User, Phone, Mail, Building, MapPin, Edit, Calendar } from "lucide-react"
+import { Phone, Mail, Building, MapPin, Edit, Calendar } from "lucide-react"
 import Link from "next/link"
 
 export default async function CustomerDetailPage(props: { params: Promise<{ id: string, locale: string }> }) {
@@ -130,7 +130,7 @@ export default async function CustomerDetailPage(props: { params: Promise<{ id: 
                                 <CardContent className="p-0">
                                     {customer.orders && customer.orders.length > 0 ? (
                                         <div className="divide-y">
-                                            {customer.orders.map((order: any) => (
+                                            {customer.orders.map((order) => (
                                                 <div key={order.id} className="flex justify-between items-center p-4 hover:bg-muted/50 transition-colors">
                                                     <div>
                                                         <div className="font-medium">
@@ -141,7 +141,7 @@ export default async function CustomerDetailPage(props: { params: Promise<{ id: 
                                                         <div className="text-sm text-muted-foreground">{formatDate(order.createdAt)}</div>
                                                     </div>
                                                     <div className="text-right">
-                                                        <div className="font-bold">{formatCurrency(order.total, order.currency)}</div>
+                                                        <div className="font-bold">{formatCurrency(Number(order.total), order.currency)}</div>
                                                         <Badge variant={order.status === "COMPLETED" ? "default" : "secondary"}>
                                                             {order.status}
                                                         </Badge>

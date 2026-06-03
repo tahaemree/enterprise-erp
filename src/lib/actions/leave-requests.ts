@@ -58,7 +58,7 @@ export async function getLeaveRequest(id: string) {
     })
 }
 
-export async function createLeaveRequest(data: LeaveRequestFormData): Promise<ActionResult<Prisma.LeaveRequestGetPayload<{}>>> {
+export async function createLeaveRequest(data: LeaveRequestFormData): Promise<ActionResult<Prisma.LeaveRequestGetPayload<Record<string, never>>>> {
     return executeAction(async () => {
         const user = await requireAuth()
         const db = getTenantPrisma(user.tenantId)

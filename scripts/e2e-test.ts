@@ -108,8 +108,8 @@ async function runTest() {
 
         // 6. Finance: Create Account Entry
         console.log("✅ 6. Creating Account Entry...")
-        const entryCount = await prisma.accountEntry.count({ where: { tenantId } })
-        const entry = await prisma.accountEntry.create({
+        const _entryCount = await prisma.accountEntry.count({ where: { tenantId } })
+        const _entry = await prisma.accountEntry.create({
             data: {
                 tenantId,
                 entryNumber: `F-TEST-${Math.random().toString(36).substring(2, 10).toUpperCase()}`,

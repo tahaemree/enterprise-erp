@@ -327,10 +327,10 @@ describe("MODULE", () => {
     })
 
     it("should use kebab-case", () => {
-        for (const module of Object.values(MODULE)) {
-            expect(module).not.toContain("_")
-            expect(module).not.toContain(" ")
-            expect(module).toBe(module.toLowerCase())
+        for (const moduleName of Object.values(MODULE)) {
+            expect(moduleName).not.toContain("_")
+            expect(moduleName).not.toContain(" ")
+            expect(moduleName).toBe(moduleName.toLowerCase())
         }
     })
 

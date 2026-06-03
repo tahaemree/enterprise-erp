@@ -4,7 +4,7 @@ import { useTheme } from "@teispace/next-themes"
 import { useTranslations } from "next-intl"
 import { useState, useEffect } from "react"
 import { useSession, signOut } from "next-auth/react"
-import { Bell, Moon, Sun, Search, Menu, LogOut, User, Settings, CreditCard, CheckCheck } from "lucide-react"
+import { Bell, Moon, Sun, LogOut, User, Settings, CreditCard, CheckCheck } from "lucide-react"
 import Link from "next/link"
 import { getNotifications, markAllAsRead } from "@/lib/actions/notifications"
 import { Button } from "@/components/ui/button"
@@ -14,7 +14,6 @@ import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
-    DropdownMenuLabel,
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
@@ -50,7 +49,7 @@ export function Header() {
                 setNotifs(formatted)
             }
         })
-    }, [])
+    }, [t])
 
     const handleMarkAllRead = async () => {
         const res = await markAllAsRead()
@@ -109,7 +108,7 @@ export function Header() {
                 {/* Notifications */}
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="relative">
+                        <Button variant="ghost" size="icon" className="relative" aria-label={t("notifications")}>
                             <Bell className="h-5 w-5" />
                             {notifs.length > 0 && (
                                 <Badge

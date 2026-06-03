@@ -111,6 +111,36 @@ const ENCRYPTED_FIELDS: Record<string, string[]> = {
     BankAccount: ["iban"],
 }
 
+type MutableRecord = Record<string, unknown>
+
+function asMutableRecord(value: unknown): MutableRecord | null {
+    return value !== null && typeof value === "object" && !Array.isArray(value)
+        ? value as MutableRecord
+        : null
+}
+
+function encryptRecordFields(record: MutableRecord, fields: string[]): void {
+    for (const field of fields) {
+        const value = record[field]
+        if (typeof value === "string" && value) {
+            record[field] = encrypt(value)
+        }
+    }
+}
+
+function decryptRecordFields(record: MutableRecord, fields: string[]): void {
+    for (const field of fields) {
+        const value = record[field]
+        if (typeof value === "string" && value) {
+            record[field] = decrypt(value)
+        }
+    }
+}
+
+function addTenantId(record: MutableRecord, tenantId: string): void {
+    record.tenantId = record.tenantId ?? tenantId
+}
+
 /**
  * Creates the Prisma client extension for a specific tenant.
  * Encapsulated in a function so the LRU cache can create new instances on miss.
@@ -133,32 +163,27 @@ function createTenantPrisma(tenantId: string) {
                     // ─── 1. KVKK Encryption (Input) ────────────────────────────
                     if (encryptedFields && ["create", "update", "createMany", "updateMany", "upsert"].includes(operation)) {
                         if ("data" in args && args.data != null) {
-                            const data = args.data as Record<string, any>
+                            const data = args.data
                             if (Array.isArray(data)) {
                                 args.data = data.map(item => {
-                                    const newItem = { ...item }
-                                    for (const field of encryptedFields) {
-                                        if (newItem[field]) newItem[field] = encrypt(newItem[field])
-                                    }
+                                    const record = asMutableRecord(item)
+                                    if (!record) return item
+                                    const newItem = { ...record }
+                                    encryptRecordFields(newItem, encryptedFields)
                                     return newItem
                                 })
                             } else {
-                                for (const field of encryptedFields) {
-                                    if (data[field]) data[field] = encrypt(data[field])
-                                }
+                                const record = asMutableRecord(data)
+                                if (record) encryptRecordFields(record, encryptedFields)
                             }
                         }
                         if ("create" in args && args.create != null && !Array.isArray(args.create)) {
-                            const createData = args.create as Record<string, any>
-                            for (const field of encryptedFields) {
-                                if (createData[field]) createData[field] = encrypt(createData[field])
-                            }
+                            const createData = asMutableRecord(args.create)
+                            if (createData) encryptRecordFields(createData, encryptedFields)
                         }
                         if ("update" in args && args.update != null && !Array.isArray(args.update)) {
-                            const updateData = args.update as Record<string, any>
-                            for (const field of encryptedFields) {
-                                if (updateData[field]) updateData[field] = encrypt(updateData[field])
-                            }
+                            const updateData = asMutableRecord(args.update)
+                            if (updateData) encryptRecordFields(updateData, encryptedFields)
                         }
                     }
 
@@ -169,8 +194,8 @@ function createTenantPrisma(tenantId: string) {
                     // admin queries that include deleted records).
                     if (isSoftDeletable && READ_OPERATIONS.has(operation)) {
                         const where = ("where" in args && args.where != null)
-                            ? args.where as Record<string, any>
-                            : {} as Record<string, any>
+                            ? args.where as MutableRecord
+                            : {} as MutableRecord
                         // Only inject if the query doesn't already filter by deletedAt
                         // Note: This allows explicit queries like { deletedAt: { not: null } } to bypass
                         // the automatic filter for admin panels that need to view deleted records.
@@ -188,7 +213,7 @@ function createTenantPrisma(tenantId: string) {
                                 // SECURITY: ALWAYS override tenantId to prevent Tenant Isolation Bypass
                                 // For findUnique/findUniqueOrThrow, Prisma 6.x accepts additional non-unique
                                 // fields in the where clause and generates the correct SQL internally.
-                                ; (where as Record<string, any>).tenantId = tenantId
+                                ; (where as MutableRecord).tenantId = tenantId
                             args.where = where
                         }
 
@@ -196,45 +221,55 @@ function createTenantPrisma(tenantId: string) {
                         if ("data" in args && args.data != null) {
                             const data = args.data
                             if (Array.isArray(data)) {
-                                args.data = data.map((item: Record<string, any>) => ({
-                                    ...item,
-                                    tenantId: item.tenantId ?? tenantId,
-                                }))
+                                args.data = data.map((item) => {
+                                    const record = asMutableRecord(item)
+                                    if (!record) return item
+                                    return {
+                                        ...record,
+                                        tenantId: record.tenantId ?? tenantId,
+                                    }
+                                })
                             } else if (typeof data === "object") {
-                                ; (args.data as Record<string, any>).tenantId =
-                                    (data as Record<string, any>).tenantId ?? tenantId
+                                const record = asMutableRecord(args.data)
+                                if (record) addTenantId(record, tenantId)
                             }
                         }
 
                         // UPSERT handling
                         if ("create" in args && typeof args.create === "object" && args.create != null && !Array.isArray(args.create)) {
-                            ; (args.create as Record<string, any>).tenantId =
-                                (args.create as Record<string, any>).tenantId ?? tenantId
+                            const createData = asMutableRecord(args.create)
+                            if (createData) addTenantId(createData, tenantId)
                         }
                     }
 
-                    // ─── EXECUTE QUERY WITH RLS (Row Level Security) ───────────
-                    // Force the query into a transaction to set the session variable securely
-                    let result;
-                    if (isTenantModel) {
-                        const [, queryResult] = await basePrisma.$transaction([
-                            basePrisma.$executeRawUnsafe(
-                                `SELECT set_config('app.current_tenant_id', $1, true)`,
-                                tenantId
-                            ),
-                            query(args),
-                        ])
-                        result = queryResult
-                    } else {
-                        result = await query(args)
-                    }
+                    // ─── EXECUTE QUERY ─────────────────────────────────────────
+                    // Tenant isolation is enforced at the application layer above
+                    // (tenantId injection into every `where`/`data` clause) plus the
+                    // defense-in-depth post-check below.
+                    //
+                    // We intentionally do NOT wrap each query in a `set_config()`
+                    // transaction anymore. The previous implementation did, but it was
+                    // actively harmful:
+                    //   1. No database RLS policy reads `app.current_tenant_id`, so it
+                    //      provided ZERO protection (security theater).
+                    //   2. It forced an extra DB round-trip on every tenant query.
+                    //   3. CRITICAL: inside a service-level `$transaction()` block it
+                    //      spawned a SEPARATE transaction per operation, silently
+                    //      breaking atomicity (e.g. OrderService stock deduction +
+                    //      order creation could partially commit).
+                    //
+                    // If true Postgres RLS is wanted later, ship a migration that runs
+                    // `ALTER TABLE ... ENABLE ROW LEVEL SECURITY` + `CREATE POLICY`,
+                    // and set the GUC inside the SAME interactive transaction as the
+                    // queries (see docs/security/rls.md).
+                    const result = await query(args)
 
                     // ─── 4. Defense-in-Depth: Tenant Isolation Post-Check (fallback) ─
                     // This catches any edge case where the injection above didn't apply
                     // (e.g., findUnique on a Prisma version that doesn't support extra fields)
                     const isUniqueQuery = operation === "findUnique" || operation === "findUniqueOrThrow"
                     if (isTenantModel && isUniqueQuery && result) {
-                        const resObj = result as Record<string, any>
+                        const resObj = result as MutableRecord
                         if (resObj.tenantId && resObj.tenantId !== tenantId) {
                             if (operation === "findUniqueOrThrow") {
                                 const error = Object.assign(
@@ -252,17 +287,13 @@ function createTenantPrisma(tenantId: string) {
                         if (Array.isArray(result)) {
                             for (const item of result) {
                                 if (item) {
-                                    const record = item as Record<string, any>
-                                    for (const field of encryptedFields) {
-                                        if (record[field]) record[field] = decrypt(record[field])
-                                    }
+                                    const record = asMutableRecord(item)
+                                    if (record) decryptRecordFields(record, encryptedFields)
                                 }
                             }
                         } else {
-                            const record = result as Record<string, any>
-                            for (const field of encryptedFields) {
-                                if (record[field]) record[field] = decrypt(record[field])
-                            }
+                            const record = asMutableRecord(result)
+                            if (record) decryptRecordFields(record, encryptedFields)
                         }
                     }
 

@@ -28,6 +28,7 @@ import {
 import { DataTableColumnHeader } from "@/components/tables/data-table-column-header"
 import { formatCurrency, formatDate, getInitials } from "@/lib/utils"
 import { EmployeeStatus, EmployeeStatusBadge } from "@/components/hr/employee-status"
+import type { AppTranslator } from "@/lib/i18n-types"
 
 export type Employee = {
     id: string
@@ -46,7 +47,7 @@ export type Employee = {
     avatar?: string | null
 }
 
-export const createEmployeeColumns = (t: any, onDelete?: (id: string) => void): ColumnDef<Employee>[] => [
+export const createEmployeeColumns = (t: AppTranslator, onDelete?: (id: string) => void): ColumnDef<Employee>[] => [
     {
         id: "name",
         accessorFn: (row) => `${row.firstName} ${row.lastName}`,

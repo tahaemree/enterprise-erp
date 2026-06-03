@@ -13,6 +13,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Link } from "@/i18n/navigation"
+import type { AppTranslator } from "@/lib/i18n-types"
 
 export type CostCenterRow = {
     id: string
@@ -22,7 +23,7 @@ export type CostCenterRow = {
     isActive: boolean
 }
 
-export function createCostCenterColumns(t: any): ColumnDef<CostCenterRow>[] {
+export function createCostCenterColumns(t: AppTranslator): ColumnDef<CostCenterRow>[] {
     return [
         {
             accessorKey: "code",

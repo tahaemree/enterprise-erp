@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { DataTableColumnHeader } from "@/components/tables/data-table-column-header"
 import { formatCurrency, formatDate } from "@/lib/utils"
+import type { AppTranslator } from "@/lib/i18n-types"
 
 export type Invoice = {
     id: string
@@ -61,7 +62,7 @@ const statusConfig = {
     },
 }
 
-export const createInvoiceColumns = (t: any): ColumnDef<Invoice>[] => [
+export const createInvoiceColumns = (t: AppTranslator): ColumnDef<Invoice>[] => [
     {
         accessorKey: "invoiceNumber",
         header: ({ column }) => (

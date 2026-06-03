@@ -348,7 +348,7 @@ export interface P12ParseResult {
  * // result.privateKey -> PEM formatında özel anahtar
  * ```
  */
-export function parseP12(p12Buffer: ArrayBuffer | Buffer, password: string): P12ParseResult {
+export function parseP12(_p12Buffer: ArrayBuffer | Buffer, _password: string): P12ParseResult {
     // Gerçek uygulamada:
     // 1. node-forge ile PKCS#12 çözümleme
     // 2. Sertifika ve anahtarı PEM formatına dönüştürme

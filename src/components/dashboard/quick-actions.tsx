@@ -2,7 +2,6 @@
 
 import { useTranslations } from "next-intl"
 import {
-    Plus,
     Package,
     UserPlus,
     ShoppingCart,

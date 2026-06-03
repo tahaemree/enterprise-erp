@@ -4,13 +4,12 @@ import { revalidatePath } from "next/cache"
 import { getTenantPrisma } from "@/lib/prisma"
 import { requireAuth, requireManager } from "@/lib/auth-utils"
 import logger from "@/lib/logger"
-import { getPaginationArgs, createPaginatedResult, type PaginationParams, type PaginatedResult } from "@/lib/pagination"
 import {
     inflationCoefficientSchema,
     type InflationCoefficientFormValues,
 } from "@/lib/validations/tr-accounting"
 import type { Prisma } from "@prisma/client"
-import { executeAction, fromZodError, NotFoundError, ConflictError, type ActionResult } from "@/lib/errors"
+import { executeAction, fromZodError, type ActionResult } from "@/lib/errors"
 import { MODULE, PATHS } from "@/lib/constants"
 
 // ==================== ENFLASYON MUHASEBESİ ====================
@@ -23,7 +22,7 @@ export async function getInflationCoefficients() {
     })
 }
 
-export async function createInflationCoefficient(data: InflationCoefficientFormValues) : Promise<ActionResult<Prisma.InflationCoefficientGetPayload<{}>>> {
+export async function createInflationCoefficient(data: InflationCoefficientFormValues) : Promise<ActionResult<Prisma.InflationCoefficientGetPayload<Record<string, never>>>> {
     return executeAction(async () => {
     
         const user = await requireAuth()

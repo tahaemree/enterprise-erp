@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "@/i18n/navigation"
-import { useForm } from "react-hook-form"
+import { useForm, useWatch } from "react-hook-form"
 import { useTranslations } from "next-intl"
 import { toast } from "sonner"
 import { z } from "zod"
@@ -52,7 +52,7 @@ export function ExchangeRateForm() {
         }).finally(() => {
             setIsLoadingCurrencies(false)
         })
-    }, [])
+    }, [t])
 
     const form = useForm<FormValues>({
         defaultValues: {
@@ -64,7 +64,7 @@ export function ExchangeRateForm() {
         },
     })
 
-    const selectedFromCurrency = form.watch("fromCurrencyId")
+    const selectedFromCurrency = useWatch({ control: form.control, name: "fromCurrencyId" })
     const filteredToCurrencies = currencies.filter((c) => c.id !== selectedFromCurrency)
 
     async function onSubmit(data: FormValues) {

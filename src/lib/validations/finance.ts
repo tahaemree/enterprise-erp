@@ -32,7 +32,14 @@ export const orderSchema = z.object({
         .enum(["DRAFT", "PENDING", "CONFIRMED", "PROCESSING", "SHIPPED", "DELIVERED", "COMPLETED", "CANCELLED", "REFUNDED", "ON_HOLD"])
         .default("PENDING"),
     items: z.array(orderItemSchema).min(1),
-    total: z.coerce.number().min(0),
+    // KDV / iskonto / kargo — totals are recomputed authoritatively on the server.
+    taxRate: z.coerce.number().min(0).max(100).default(20),
+    discountType: z.enum(["fixed", "percentage"]).default("fixed"),
+    discountValue: z.coerce.number().min(0).default(0),
+    shippingAmount: z.coerce.number().min(0).default(0),
+    currency: z.string().default("TRY"),
+    // Client-side hint only; the server never trusts this value.
+    total: z.coerce.number().min(0).optional(),
     notes: z.string().optional(),
 })
 

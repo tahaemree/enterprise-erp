@@ -1,7 +1,36 @@
 import { NextResponse } from "next/server"
 import { basePrisma, getTenantPrisma } from "@/lib/prisma"
 import { checkRateLimit } from "@/lib/rate-limit"
+import { getApiKeyPrefix, verifyApiKey } from "@/lib/api-key"
 import logger from "@/lib/logger"
+
+/**
+ * Resolves an API token to a tenant.
+ *
+ * Preferred path: indexed lookup by non-secret prefix, then constant-time hash
+ * verification. Falls back to the legacy plaintext column for keys that have
+ * not yet been backfilled/rotated (see scripts/backfill-api-keys.ts).
+ */
+async function resolveTenantByApiKey(
+    token: string,
+): Promise<{ id: string; name: string } | null> {
+    const prefix = getApiKeyPrefix(token)
+
+    const candidate = await basePrisma.tenant.findUnique({
+        where: { apiKeyPrefix: prefix },
+        select: { id: true, name: true, apiKeyHash: true },
+    })
+    if (candidate?.apiKeyHash && verifyApiKey(token, candidate.apiKeyHash)) {
+        return { id: candidate.id, name: candidate.name }
+    }
+
+    // Legacy fallback: plaintext key not yet migrated to hash storage.
+    const legacy = await basePrisma.tenant.findUnique({
+        where: { apiKey: token },
+        select: { id: true, name: true },
+    })
+    return legacy ?? null
+}
 
 export async function GET(request: Request) {
     try {
@@ -33,11 +62,7 @@ export async function GET(request: Request) {
             )
         }
 
-        // Use basePrisma singleton — no new PrismaClient() leak
-        const tenant = await basePrisma.tenant.findUnique({
-            where: { apiKey: token },
-            select: { id: true, name: true },
-        })
+        const tenant = await resolveTenantByApiKey(token)
 
         if (!tenant) {
             return NextResponse.json(

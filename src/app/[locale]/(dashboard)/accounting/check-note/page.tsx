@@ -1,4 +1,5 @@
 import { Link } from "@/i18n/navigation"
+import { RoleGate } from "@/components/auth/role-gate"
 import { Plus, ScrollText, CheckSquare, XSquare, FileText } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { getTranslations } from "next-intl/server"
@@ -60,12 +61,14 @@ export default async function AccountingCheckNotesPage({
                         <FileText className="h-4 w-4" />
                         <span>{t("accounting.checkNote.documents", { count: totalCount })}</span>
                     </div>
+                    <RoleGate allow="MANAGER">
                     <Button asChild>
                         <Link href="/accounting/check-note/new">
                             <Plus className="mr-2 h-4 w-4" />
                             {t("accounting.checkNote.addDocument")}
                         </Link>
                     </Button>
+                    </RoleGate>
                 </div>
             </div>
 

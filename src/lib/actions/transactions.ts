@@ -1,9 +1,8 @@
 "use server"
 
-import { revalidatePath } from "next/cache"
 import { getTenantPrisma } from "@/lib/prisma"
 import { requireAuth } from "@/lib/auth-utils"
-import { transactionSchema, type TransactionFormValues } from "@/lib/validations/finance"
+import { transactionSchema } from "@/lib/validations/finance"
 import type { Prisma } from "@prisma/client"
 import { NotFoundError } from "@/lib/errors"
 import { validatedActionWithRole } from "@/lib/action-wrapper"
@@ -11,7 +10,7 @@ import { getPaginationArgs, createPaginatedResult, type PaginationParams, type P
 import { ENTITY_TYPE, PATHS } from "@/lib/constants"
 import { z } from "zod"
 
-type TransactionWithMapped = Prisma.TransactionGetPayload<{}> & { amount: number }
+type TransactionWithMapped = Prisma.TransactionGetPayload<Record<string, never>> & { amount: number }
 
 export interface TransactionStats {
     totalIncome: number

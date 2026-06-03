@@ -1,4 +1,5 @@
 import { Link } from "@/i18n/navigation"
+import { RoleGate } from "@/components/auth/role-gate"
 import { getTranslations } from "next-intl/server"
 import { Plus, ArrowLeftRight, Calendar, Database } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -46,12 +47,14 @@ export default async function ExchangeRatesPage({
                         {t("accounting.exchangeRates.description")}
                     </p>
                 </div>
+                <RoleGate allow="MANAGER">
                 <Button asChild>
                     <Link href="/accounting/exchange-rates/new">
                         <Plus className="mr-2 h-4 w-4" />
                         {t("accounting.exchangeRates.newRate")}
                     </Link>
                 </Button>
+                </RoleGate>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

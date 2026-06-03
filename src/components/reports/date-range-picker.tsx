@@ -2,12 +2,13 @@
 
 import { useState } from "react"
 import { useTranslations } from "next-intl"
-import { CalendarIcon, ChevronLeft, ChevronRight, RefreshCw } from "lucide-react"
+import { CalendarIcon, RefreshCw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
-import { cn, formatDate } from "@/lib/utils"
+import { formatDate } from "@/lib/utils"
+import type { AppTranslator } from "@/lib/i18n-types"
 
 
 interface DateRangePickerProps {
@@ -19,15 +20,15 @@ interface DateRangePickerProps {
     onComparisonChange?: (value: boolean) => void
 }
 
-const getPresets = (t: any) => [
-    { label: t.has("dateRange.thisMonth") ? t("dateRange.thisMonth") : "This Month", getRange: () => getMonthRange(0) },
-    { label: t.has("dateRange.lastMonth") ? t("dateRange.lastMonth") : "Last Month", getRange: () => getMonthRange(-1) },
-    { label: t.has("dateRange.thisQuarter") ? t("dateRange.thisQuarter") : "This Quarter", getRange: () => getQuarterRange(0) },
-    { label: t.has("dateRange.lastQuarter") ? t("dateRange.lastQuarter") : "Last Quarter", getRange: () => getQuarterRange(-1) },
-    { label: t.has("dateRange.thisYear") ? t("dateRange.thisYear") : "This Year", getRange: () => getYearRange(0) },
-    { label: t.has("dateRange.lastYear") ? t("dateRange.lastYear") : "Last Year", getRange: () => getYearRange(-1) },
-    { label: t.has("dateRange.last30Days") ? t("dateRange.last30Days") : "Last 30 Days", getRange: () => getDaysRange(30) },
-    { label: t.has("dateRange.last90Days") ? t("dateRange.last90Days") : "Last 90 Days", getRange: () => getDaysRange(90) },
+const getPresets = (t: AppTranslator) => [
+    { label: t.has?.("dateRange.thisMonth") ? t("dateRange.thisMonth") : "This Month", getRange: () => getMonthRange(0) },
+    { label: t.has?.("dateRange.lastMonth") ? t("dateRange.lastMonth") : "Last Month", getRange: () => getMonthRange(-1) },
+    { label: t.has?.("dateRange.thisQuarter") ? t("dateRange.thisQuarter") : "This Quarter", getRange: () => getQuarterRange(0) },
+    { label: t.has?.("dateRange.lastQuarter") ? t("dateRange.lastQuarter") : "Last Quarter", getRange: () => getQuarterRange(-1) },
+    { label: t.has?.("dateRange.thisYear") ? t("dateRange.thisYear") : "This Year", getRange: () => getYearRange(0) },
+    { label: t.has?.("dateRange.lastYear") ? t("dateRange.lastYear") : "Last Year", getRange: () => getYearRange(-1) },
+    { label: t.has?.("dateRange.last30Days") ? t("dateRange.last30Days") : "Last 30 Days", getRange: () => getDaysRange(30) },
+    { label: t.has?.("dateRange.last90Days") ? t("dateRange.last90Days") : "Last 90 Days", getRange: () => getDaysRange(90) },
 ]
 
 function getMonthRange(offset: number) {

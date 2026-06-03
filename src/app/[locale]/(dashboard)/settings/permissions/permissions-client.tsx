@@ -51,7 +51,7 @@ export function PermissionsClient({ users }: { users: UserWithPerms[] }) {
             if (!result.ok) throw new Error(result.error)
             
             toast.success("Yetkiler başarıyla güncellendi.")
-        } catch (error) {
+        } catch (_error) {
             toast.error("Yetkiler güncellenirken bir hata oluştu.")
         } finally {
             setSavingId(null)

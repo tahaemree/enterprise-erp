@@ -184,6 +184,7 @@ export interface MaskedEmployee {
     salary?: number | null
     bankName?: string | null
     bankAccount?: string | null
+    iban?: string | null
     taxId?: string | null
     emergencyContact?: string | null
     emergencyPhone?: string | null
@@ -211,6 +212,7 @@ export function maskEmployee<T extends MaskedEmployee>(
         salary: maskSalary(employee.salary as number | null | undefined, level),
         bankName: maskNotes(employee.bankName, level),
         bankAccount: maskBankAccount(employee.bankAccount, level),
+        iban: maskIban(employee.iban, level),
         taxId: maskTaxId(employee.taxId, level),
         emergencyContact: maskGenericString(employee.emergencyContact, level),
         emergencyPhone: maskPhone(employee.emergencyPhone, level),

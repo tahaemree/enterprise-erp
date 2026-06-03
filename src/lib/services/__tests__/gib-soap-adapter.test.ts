@@ -9,8 +9,11 @@ import {
     GIB_ENDPOINTS,
     GIB_NAMESPACES,
     type GibSoapConfig,
-    type GibDocumentType,
 } from "@/lib/services/gib-soap-adapter"
+
+function mockFetchResponse(body: string, init?: ResponseInit): Response {
+    return new Response(body, init)
+}
 
 // ==================== buildSoapEnvelope ====================
 
@@ -153,7 +156,7 @@ describe("parseSoapResponse", () => {
             const result = parseSoapResponse(xml, "sendInvoice")
             if ("accepted" in result) {
                 expect(result.accepted).toBe(true)
-                expect((result as any).documentNumber).toBe("GIB202600000001")
+                expect(result.documentNumber).toBe("GIB202600000001")
             } else {
                 expect.unreachable()
             }
@@ -168,11 +171,12 @@ describe("parseSoapResponse", () => {
   <warning>Uyarı: Tutar farkı var</warning>
 </ef:sendInvoiceResponse>
 </soapenv:Body></soapenv:Envelope>`
-            const result = parseSoapResponse(xml, "sendInvoice") as any
+            const result = parseSoapResponse(xml, "sendInvoice")
             expect(result.accepted).toBe(true)
-            expect(result.warnings).toHaveLength(2)
-            expect(result.warnings[0]).toContain("Mükellef")
-            expect(result.warnings[1]).toContain("Tutar")
+            const warnings = result.warnings ?? []
+            expect(warnings).toHaveLength(2)
+            expect(warnings[0]).toContain("Mükellef")
+            expect(warnings[1]).toContain("Tutar")
         })
 
         it("should return error when SOAP Fault exists", () => {
@@ -183,13 +187,13 @@ describe("parseSoapResponse", () => {
   <faultstring>GIB-001: Servis hatası</faultstring>
 </soapenv:Fault>
 </soapenv:Body></soapenv:Envelope>`
-            const result = parseSoapResponse(xml, "sendInvoice") as any
+            const result = parseSoapResponse(xml, "sendInvoice")
             expect(result.accepted).toBe(false)
             expect(result.errorCode).toBe("soapenv:Server")
         })
 
         it("should return accepted true for non-XML without SOAP Fault", () => {
-            const result = parseSoapResponse("not xml", "sendInvoice") as any
+            const result = parseSoapResponse("not xml", "sendInvoice")
             expect(result.accepted).toBe(true)
             expect(result.documentNumber).toBeUndefined()
         })
@@ -203,7 +207,7 @@ describe("parseSoapResponse", () => {
   <status>KABUL</status>
 </ef:getInvoiceStatusResponse>
 </soapenv:Body></soapenv:Envelope>`
-            const result = parseSoapResponse(xml, "getInvoiceStatus") as any
+            const result = parseSoapResponse(xml, "getInvoiceStatus")
             expect(result.status).toBe("ACCEPTED")
         })
 
@@ -216,7 +220,7 @@ describe("parseSoapResponse", () => {
   <errorMessage>XML şeması geçersiz</errorMessage>
 </ef:getInvoiceStatusResponse>
 </soapenv:Body></soapenv:Envelope>`
-            const result = parseSoapResponse(xml, "getInvoiceStatus") as any
+            const result = parseSoapResponse(xml, "getInvoiceStatus")
             expect(result.status).toBe("REJECTED")
             expect(result.errorCode).toBe("GIB-100")
             expect(result.errorMessage).toBe("XML şeması geçersiz")
@@ -229,7 +233,7 @@ describe("parseSoapResponse", () => {
   <status>UYARI</status>
 </ef:getInvoiceStatusResponse>
 </soapenv:Body></soapenv:Envelope>`
-            const result = parseSoapResponse(xml, "getInvoiceStatus") as any
+            const result = parseSoapResponse(xml, "getInvoiceStatus")
             expect(result.status).toBe("WARNING")
         })
 
@@ -240,7 +244,7 @@ describe("parseSoapResponse", () => {
   <status>BEKLIYOR</status>
 </ef:getInvoiceStatusResponse>
 </soapenv:Body></soapenv:Envelope>`
-            const result = parseSoapResponse(xml, "getInvoiceStatus") as any
+            const result = parseSoapResponse(xml, "getInvoiceStatus")
             expect(result.status).toBe("PENDING")
         })
 
@@ -251,7 +255,7 @@ describe("parseSoapResponse", () => {
   <status>BILINMIYOR</status>
 </ef:getInvoiceStatusResponse>
 </soapenv:Body></soapenv:Envelope>`
-            const result = parseSoapResponse(xml, "getInvoiceStatus") as any
+            const result = parseSoapResponse(xml, "getInvoiceStatus")
             expect(result.status).toBe("NOT_FOUND")
         })
 
@@ -262,7 +266,7 @@ describe("parseSoapResponse", () => {
   <faultstring>Service unavailable</faultstring>
 </soapenv:Fault>
 </soapenv:Body></soapenv:Envelope>`
-            const result = parseSoapResponse(xml, "getInvoiceStatus") as any
+            const result = parseSoapResponse(xml, "getInvoiceStatus")
             expect(result.status).toBe("REJECTED")
         })
     })
@@ -277,7 +281,7 @@ describe("parseSoapResponse", () => {
   <vkn>1234567890</vkn>
 </ef:checkUserResponse>
 </soapenv:Body></soapenv:Envelope>`
-            const result = parseSoapResponse(xml, "checkUser") as any
+            const result = parseSoapResponse(xml, "checkUser")
             expect(result.isRegistered).toBe(true)
             expect(result.title).toBe("ACME Ltd. Şti.")
             expect(result.taxId).toBe("1234567890")
@@ -290,7 +294,7 @@ describe("parseSoapResponse", () => {
   <registered>false</registered>
 </ef:checkUserResponse>
 </soapenv:Body></soapenv:Envelope>`
-            const result = parseSoapResponse(xml, "checkUser") as any
+            const result = parseSoapResponse(xml, "checkUser")
             expect(result.isRegistered).toBe(false)
         })
 
@@ -301,7 +305,7 @@ describe("parseSoapResponse", () => {
   <registered>1</registered>
 </ef:checkUserResponse>
 </soapenv:Body></soapenv:Envelope>`
-            const result = parseSoapResponse(xml, "checkUser") as any
+            const result = parseSoapResponse(xml, "checkUser")
             expect(result.isRegistered).toBe(true)
         })
 
@@ -312,7 +316,7 @@ describe("parseSoapResponse", () => {
   <faultstring>Server error</faultstring>
 </soapenv:Fault>
 </soapenv:Body></soapenv:Envelope>`
-            const result = parseSoapResponse(xml, "checkUser") as any
+            const result = parseSoapResponse(xml, "checkUser")
             expect(result.isRegistered).toBe(false)
             expect(result.errorMessage).toBe("Server error")
         })
@@ -326,7 +330,7 @@ describe("parseSoapResponse", () => {
   <success>true</success>
 </ef:cancelInvoiceResponse>
 </soapenv:Body></soapenv:Envelope>`
-            const result = parseSoapResponse(xml, "cancelInvoice") as any
+            const result = parseSoapResponse(xml, "cancelInvoice")
             expect(result.accepted).toBe(true)
         })
 
@@ -337,7 +341,7 @@ describe("parseSoapResponse", () => {
   <success>false</success>
 </ef:cancelInvoiceResponse>
 </soapenv:Body></soapenv:Envelope>`
-            const result = parseSoapResponse(xml, "cancelInvoice") as any
+            const result = parseSoapResponse(xml, "cancelInvoice")
             expect(result.accepted).toBe(false)
         })
 
@@ -348,7 +352,7 @@ describe("parseSoapResponse", () => {
   <faultcode>soapenv:Server</faultcode>
 </soapenv:Fault>
 </soapenv:Body></soapenv:Envelope>`
-            const result = parseSoapResponse(xml, "cancelInvoice") as any
+            const result = parseSoapResponse(xml, "cancelInvoice")
             expect(result.accepted).toBe(false)
         })
     })
@@ -464,10 +468,7 @@ describe("GibSoapAdapter", () => {
 </ef:sendInvoiceResponse>
 </soapenv:Body></soapenv:Envelope>`
 
-            vi.mocked(fetch).mockResolvedValueOnce({
-                ok: true,
-                text: () => Promise.resolve(mockResponse),
-            } as any)
+            vi.mocked(fetch).mockResolvedValueOnce(mockFetchResponse(mockResponse))
 
             const result = await adapter.sendInvoice({
                 ublXml: "<Invoice>...</Invoice>",
@@ -511,12 +512,12 @@ describe("GibSoapAdapter", () => {
 
         it("should return GIB-001 on HTTP 500", async () => {
             // Use persistent mock so all retry attempts return HTTP 500
-            vi.mocked(fetch).mockResolvedValue({
-                ok: false,
-                status: 500,
-                statusText: "Internal Server Error",
-                text: () => Promise.resolve("Server Error"),
-            } as any)
+            vi.mocked(fetch).mockResolvedValue(
+                mockFetchResponse("Server Error", {
+                    status: 500,
+                    statusText: "Internal Server Error",
+                })
+            )
 
             const result = await adapter.sendInvoice({
                 ublXml: "<Invoice>...</Invoice>",
@@ -536,15 +537,12 @@ describe("GibSoapAdapter", () => {
                 timeoutMs: 5000,
             })
 
-            global.fetch = vi.fn().mockResolvedValueOnce({
-                ok: true,
-                text: () => Promise.resolve(`<?xml version="1.0"?>
+            global.fetch = vi.fn().mockResolvedValueOnce(mockFetchResponse(`<?xml version="1.0"?>
 <soapenv:Envelope><soapenv:Body>
 <ef:getInvoiceStatusResponse>
   <status>KABUL</status>
 </ef:getInvoiceStatusResponse>
-</soapenv:Body></soapenv:Envelope>`),
-            } as any)
+</soapenv:Body></soapenv:Envelope>`))
 
             const result = await adapter.getInvoiceStatus("test-uuid", "INVOICE")
             expect(result).toHaveProperty("success")
@@ -563,17 +561,14 @@ describe("GibSoapAdapter", () => {
                 timeoutMs: 5000,
             })
 
-            global.fetch = vi.fn().mockResolvedValueOnce({
-                ok: true,
-                text: () => Promise.resolve(`<?xml version="1.0"?>
+            global.fetch = vi.fn().mockResolvedValueOnce(mockFetchResponse(`<?xml version="1.0"?>
 <soapenv:Envelope><soapenv:Body>
 <ef:checkUserResponse>
   <registered>true</registered>
   <title>ACME Ltd.</title>
   <vkn>1234567890</vkn>
 </ef:checkUserResponse>
-</soapenv:Body></soapenv:Envelope>`),
-            } as any)
+</soapenv:Body></soapenv:Envelope>`))
 
             const result = await adapter.checkUser("1234567890")
             expect(result).toHaveProperty("success")
@@ -592,15 +587,12 @@ describe("GibSoapAdapter", () => {
                 timeoutMs: 5000,
             })
 
-            global.fetch = vi.fn().mockResolvedValueOnce({
-                ok: true,
-                text: () => Promise.resolve(`<?xml version="1.0"?>
+            global.fetch = vi.fn().mockResolvedValueOnce(mockFetchResponse(`<?xml version="1.0"?>
 <soapenv:Envelope><soapenv:Body>
 <ef:cancelInvoiceResponse>
   <success>true</success>
 </ef:cancelInvoiceResponse>
-</soapenv:Body></soapenv:Envelope>`),
-            } as any)
+</soapenv:Body></soapenv:Envelope>`))
 
             const result = await adapter.cancelInvoice("test-uuid", "Mükellef hatası")
             expect(result).toHaveProperty("success")
@@ -619,15 +611,12 @@ describe("GibSoapAdapter", () => {
                 timeoutMs: 5000,
             })
 
-            global.fetch = vi.fn().mockResolvedValueOnce({
-                ok: true,
-                text: () => Promise.resolve(`<?xml version="1.0"?>
+            global.fetch = vi.fn().mockResolvedValueOnce(mockFetchResponse(`<?xml version="1.0"?>
 <soapenv:Envelope><soapenv:Body>
 <ef:getDocumentNumberResponse>
   <documentNumber>ARS202600000001</documentNumber>
 </ef:getDocumentNumberResponse>
-</soapenv:Body></soapenv:Envelope>`),
-            } as any)
+</soapenv:Body></soapenv:Envelope>`))
 
             const result = await adapter.getDocumentNumber("test-uuid")
             expect(result).toHaveProperty("success")

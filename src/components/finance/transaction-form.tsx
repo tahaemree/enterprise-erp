@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { useForm, type Resolver } from "react-hook-form"
+import { useForm, useWatch, type Resolver } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useTranslations } from "next-intl"
 import { toast } from "sonner"
@@ -36,9 +36,11 @@ import {
 import { cn } from "@/lib/utils"
 
 import { transactionSchema, type TransactionFormValues } from "@/lib/validations/finance"
-import { createTransaction, updateTransaction } from "@/lib/actions/transactions"
+import { createTransaction } from "@/lib/actions/transactions"
 
-export function TransactionForm({ initialData }: { initialData?: any }) {
+type TransactionInitialData = Record<string, unknown> & { id?: string }
+
+export function TransactionForm({ initialData }: { initialData?: TransactionInitialData }) {
     const t = useTranslations("transactionForm")
     const router = useRouter()
     const [isSubmitting, setIsSubmitting] = useState(false)
@@ -54,10 +56,10 @@ export function TransactionForm({ initialData }: { initialData?: any }) {
             date: new Date(),
         },
     })
-    useEffect(() => { if (initialData) { form.reset(initialData) } }, [initialData, form])
+    useEffect(() => { if (initialData) { form.reset(initialData as TransactionFormValues) } }, [initialData, form])
 
 
-    const watchType = form.watch("type")
+    const watchType = useWatch({ control: form.control, name: "type" })
 
     const categoryOptions: Record<string, string[]> = {
         INCOME: ["SALES", "SERVICE", "INVESTMENT", "INTEREST", "REFUND", "OTHER_INCOME"],

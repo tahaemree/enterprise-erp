@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { useFieldArray, useForm, type Resolver } from "react-hook-form"
+import { useFieldArray, useForm, useWatch, type Resolver } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { CalendarIcon, Plus, Trash2, FileText, Loader2 } from "lucide-react"
 import { format } from "date-fns"
@@ -55,6 +55,8 @@ export function InvoiceForm() {
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [customers, setCustomers] = useState<CustomerOption[]>([])
     const [isLoadingCustomers, setIsLoadingCustomers] = useState(true)
+    const [defaultInvoiceNumber] = useState(() => generateOrderNumber("INV"))
+    const [defaultDueDate] = useState(() => new Date(Date.now() + 30 * 24 * 60 * 60 * 1000))
 
     useEffect(() => {
         async function fetchCustomers() {
@@ -81,8 +83,8 @@ export function InvoiceForm() {
         resolver: zodResolver(invoiceSchema) as Resolver<InvoiceFormData>,
         defaultValues: {
             customerId: "",
-            invoiceNumber: generateOrderNumber("INV"),
-            dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+            invoiceNumber: defaultInvoiceNumber,
+            dueDate: defaultDueDate,
             items: [{ description: "", quantity: 1, unitPrice: 0 }],
             notes: "",
             taxRate: 15,
@@ -94,8 +96,8 @@ export function InvoiceForm() {
         name: "items",
     })
 
-    const watchItems = form.watch("items")
-    const watchTaxRate = form.watch("taxRate")
+    const watchItems = useWatch({ control: form.control, name: "items" }) ?? []
+    const watchTaxRate = useWatch({ control: form.control, name: "taxRate" }) ?? 0
 
     const subtotal = watchItems.reduce(
         (sum, item) => sum + (item.quantity || 0) * (item.unitPrice || 0),

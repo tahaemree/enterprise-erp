@@ -14,6 +14,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Link } from "@/i18n/navigation"
+import type { AppTranslator } from "@/lib/i18n-types"
 
 export type BankAccountRow = {
     id: string
@@ -26,7 +27,7 @@ export type BankAccountRow = {
     isActive: boolean
 }
 
-export function createBankAccountColumns(t: any): ColumnDef<BankAccountRow>[] {
+export function createBankAccountColumns(t: AppTranslator): ColumnDef<BankAccountRow>[] {
     return [
         {
             accessorKey: "bankName",
@@ -58,7 +59,7 @@ export function createBankAccountColumns(t: any): ColumnDef<BankAccountRow>[] {
                 let translated = type.replace("_", " ").toLowerCase()
                 try {
                     translated = t(`bankAccountForm.accountType${type}`)
-                } catch (e) {
+                } catch (_e) {
                     // Fallback to basic string manipulation if key is missing
                 }
                 return (

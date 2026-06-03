@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { useForm, type Resolver } from "react-hook-form"
+import { useForm, useWatch, type Resolver } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useTranslations } from "next-intl"
 import { toast } from "sonner"
@@ -89,8 +89,8 @@ export function LeaveRequestForm() {
         },
     })
 
-    const watchStartDate = form.watch("startDate")
-    const watchEndDate = form.watch("endDate")
+    const watchStartDate = useWatch({ control: form.control, name: "startDate" })
+    const watchEndDate = useWatch({ control: form.control, name: "endDate" })
 
     const totalDays = watchStartDate && watchEndDate
         ? differenceInCalendarDays(watchEndDate, watchStartDate) + 1

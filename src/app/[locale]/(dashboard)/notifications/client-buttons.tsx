@@ -16,7 +16,7 @@ export function MarkAllReadButton() {
         try {
             await markAllAsRead()
             toast.success(t("allMarkedRead", { fallback: "All notifications marked as read." }))
-        } catch (error) {
+        } catch (_error) {
             toast.error("Failed to mark notifications as read")
         } finally {
             setIsPending(false)
@@ -39,7 +39,7 @@ export function MarkReadButton({ id }: { id: string }) {
         setIsPending(true)
         try {
             await markAsRead(id)
-        } catch (error) {
+        } catch (_error) {
             toast.error("Failed to mark as read")
             setIsPending(false) // Only reset if failed, otherwise it stays disabled
         }

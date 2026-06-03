@@ -7,7 +7,6 @@ import {
     TrendingUp,
     TrendingDown,
     AlertTriangle,
-    CreditCard,
     UserCheck,
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"

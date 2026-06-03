@@ -1,7 +1,7 @@
 "use client"
 
 import { ColumnDef } from "@tanstack/react-table"
-import { MoreHorizontal, Eye, Pencil, Trash2, Send, Ban, FileDigit, FileArchive, Truck, RefreshCw } from "lucide-react"
+import { MoreHorizontal, Eye, Trash2, Send, Ban, FileDigit, FileArchive, Truck, RefreshCw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { DataTableColumnHeader } from "@/components/tables/data-table-column-header"
 import { formatCurrency, formatDate } from "@/lib/utils"
+import type { AppTranslator } from "@/lib/i18n-types"
 
 export type EInvoice = {
     id: string
@@ -52,7 +53,7 @@ export type EInvoice = {
     createdAt: Date
 }
 
-function getStatusBadge(status: string, t: any) {
+function getStatusBadge(status: string, t: AppTranslator) {
     const variants: Record<string, { labelKey: string; className: string }> = {
         DRAFT: { labelKey: "status_draft", className: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300" },
         PENDING_SIGN: { labelKey: "status_pending", className: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400" },
@@ -82,7 +83,7 @@ function getDocumentTypeIcon(type: string) {
 }
 
 export const createEInvoiceColumns = (
-    t: any,
+    t: AppTranslator,
     onDelete?: (id: string) => void,
     onSubmit?: (id: string) => void,
     onRetry?: (id: string) => void,

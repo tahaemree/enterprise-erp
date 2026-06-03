@@ -1,10 +1,11 @@
 import { Link } from "@/i18n/navigation"
+import { RoleGate } from "@/components/auth/role-gate"
 import { getTranslations } from "next-intl/server"
 import { Plus, Users, UserCheck, UserX, Building } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { EmployeesTable } from "@/components/hr/employees-table"
 import { type Employee } from "@/components/hr/employee-columns"
-import { getEmployees, getEmployeeStats, type EmployeeWithDepartment } from "@/lib/actions/employees"
+import { getEmployees, getEmployeeStats } from "@/lib/actions/employees"
 
 export default async function EmployeesPage({
     params: _params,
@@ -49,12 +50,14 @@ export default async function EmployeesPage({
     return (
         <div className="space-y-6">
             <div className="flex justify-end">
+                <RoleGate allow="MANAGER">
                 <Button asChild>
                     <Link href="/hr/employees/new">
                         <Plus className="mr-2 h-4 w-4" />
                         {t("addEmployee")}
                     </Link>
                 </Button>
+                </RoleGate>
             </div>
 
             {/* Stats Cards */}

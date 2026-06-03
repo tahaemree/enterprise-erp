@@ -10,7 +10,7 @@ import { activityLogService } from "@/services/activity-log.service"
 import type { Prisma } from "@prisma/client"
 import { ENTITY_TYPE, MODULE, PATHS } from "@/lib/constants"
 
-type CostCenterResult = Prisma.CostCenterGetPayload<{}>
+type CostCenterResult = Prisma.CostCenterGetPayload<Record<string, never>>
 
 export async function getCostCenters() {
     const user = await requireAuth()

@@ -193,10 +193,10 @@ async function main() {
     const ccPazarlama = await prisma.costCenter.create({
         data: { code: "CC-002", name: "Pazarlama & Satış", description: "Pazarlama ve satış faaliyetleri", tenantId: tenant1.id },
     })
-    const ccArge = await prisma.costCenter.create({
+    const _ccArge = await prisma.costCenter.create({
         data: { code: "CC-003", name: "Ar-Ge", description: "Araştırma ve geliştirme", tenantId: tenant1.id },
     })
-    const ccUretim = await prisma.costCenter.create({
+    const _ccUretim = await prisma.costCenter.create({
         data: { code: "CC-004", name: "Üretim", description: "Üretim ve operasyon", tenantId: tenant1.id },
     })
     const ccIT = await prisma.costCenter.create({
@@ -229,7 +229,7 @@ async function main() {
             description: "Döviz ihracat hesabı", tenantId: tenant1.id,
         },
     })
-    const bankAkbankEUR = await prisma.bankAccount.create({
+    const _bankAkbankEUR = await prisma.bankAccount.create({
         data: {
             bankName: "Akbank", branchName: "Etiler Şubesi", branchCode: "3456",
             accountNumber: "TR78-3456-7890-1234", iban: "TR78345678901234000004",
@@ -368,7 +368,7 @@ async function main() {
             unit: "adet", categoryId: catMobilya.id, supplierId: supOfis.id, tenantId: tenant1.id,
         },
     })
-    const prodPaper = await prisma.product.create({
+    const _prodPaper = await prisma.product.create({
         data: {
             name: "A4 Fotokopi Kağıdı (80gr, 500 yaprak)", sku: "PAPER-A4-001",
             barcode: "8681234567892",
@@ -377,7 +377,7 @@ async function main() {
             unit: "paket", categoryId: catSarf.id, supplierId: supOfis.id, tenantId: tenant1.id,
         },
     })
-    const prodKB = await prisma.product.create({
+    const _prodKB = await prisma.product.create({
         data: {
             name: "Kablosuz Klavye & Fare Seti (Türkçe Q)", sku: "KB-MOUSE-001",
             description: "2.4GHz kablosuz, sessiz tuşlu, ergonomik tasarım, Türkçe Q klavye",
@@ -393,7 +393,7 @@ async function main() {
             unit: "adet", categoryId: catBilgisayar.id, supplierId: supBilisim.id, tenantId: tenant1.id,
         },
     })
-    const prodLamp = await prisma.product.create({
+    const _prodLamp = await prisma.product.create({
         data: {
             name: "LED Ofis Masası Lambası", sku: "LAMP-LED-001",
             description: "Ayarlanabilir parlaklık, 3 renk sıcaklığı, USB şarjlı LED masa lambası",
@@ -417,7 +417,7 @@ async function main() {
             unit: "lisans", categoryId: catYazilim.id, supplierId: supYazilim.id, tenantId: tenant1.id,
         },
     })
-    const prodCleaner = await prisma.product.create({
+    const _prodCleaner = await prisma.product.create({
         data: {
             name: "Endüstriyel Temizleyici (5 Litre)", sku: "CLN-IND-001",
             description: "Çok amaçlı endüstriyel yüzey temizleyici, konsantre 5L bidon",
@@ -489,7 +489,7 @@ async function main() {
             tenantId: tenant1.id,
         },
     })
-    const c4 = await prisma.customer.create({
+    const _c4 = await prisma.customer.create({
         data: {
             firstName: "Ayşe", lastName: "Şahin", email: "a.sahin@karadenizlojistik.com",
             phone: "+90 462 555 0404", company: "Karadeniz Lojistik Ltd. Şti.",
@@ -627,7 +627,7 @@ async function main() {
             tenantId: tenant1.id,
         },
     })
-    const cariC7 = await prisma.customerAccount.create({
+    const _cariC7 = await prisma.customerAccount.create({
         data: {
             customerId: c7.id, accountCode: "CARİ-M-004",
             riskLimit: 200000, currentBalance: 0, overdueBalance: 0,
@@ -776,7 +776,7 @@ async function main() {
             tenantId: tenant1.id,
         },
     })
-    const empCan = await prisma.employee.create({
+    const _empCan = await prisma.employee.create({
         data: {
             employeeId: "NX-005", firstName: "Can", lastName: "Öztürk",
             email: "can.ozturk@deftra.com", phone: "+90 532 111 0005",
@@ -1223,7 +1223,7 @@ async function main() {
     console.log("✅ Çek/Senet kayıtları oluşturuldu: 4")
 
     // ── Muhasebe Kayıtları (Account Entries) ────────────────────────────
-    const entry1 = await prisma.accountEntry.create({
+    const _entry1 = await prisma.accountEntry.create({
         data: {
             entryNumber: "FIS-2024-001", entryType: "DEBIT_NOTE",
             description: "Ankara Teknoloji A.Ş.'den tahsilat",
@@ -1236,7 +1236,7 @@ async function main() {
             },
         },
     })
-    const entry2 = await prisma.accountEntry.create({
+    const _entry2 = await prisma.accountEntry.create({
         data: {
             entryNumber: "FIS-2024-002", entryType: "CREDIT_NOTE",
             description: "Birma Group'tan tahsilat",

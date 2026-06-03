@@ -37,7 +37,7 @@ export function SuppliersTable({ data, pageCount, pagination }: SuppliersTablePr
                 toast.success(t("common.deleteSuccess"))
                 setDeleteId(null)
                 router.refresh()
-            } catch (error) {
+            } catch (_error) {
                 toast.error(t("common.deleteError"))
             } finally {
                 setIsDeleting(false)
@@ -74,18 +74,20 @@ export function SuppliersTable({ data, pageCount, pagination }: SuppliersTablePr
                 onConfirm={handleConfirmDelete}
                 isLoading={isDeleting}
             />
-            <DataTable
-                columns={columns}
-                data={data}
-                searchKey="name"
-                searchPlaceholder={t("inventory.suppliers.searchSuppliers")}
-                manualPagination={true}
-                manualFiltering={true}
-                pageCount={pageCount}
-                pagination={pagination}
-                onPaginationChange={handlePaginationChange}
-                onSearchChange={handleSearchChange}
-            />
+            <div className={isPending ? "opacity-50 pointer-events-none transition-opacity" : ""}>
+                <DataTable
+                    columns={columns}
+                    data={data}
+                    searchKey="name"
+                    searchPlaceholder={t("inventory.suppliers.searchSuppliers")}
+                    manualPagination={true}
+                    manualFiltering={true}
+                    pageCount={pageCount}
+                    pagination={pagination}
+                    onPaginationChange={handlePaginationChange}
+                    onSearchChange={handleSearchChange}
+                />
+            </div>
         </>
     )
 }

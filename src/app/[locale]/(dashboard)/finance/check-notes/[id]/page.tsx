@@ -2,12 +2,24 @@ import { getTenantPrisma } from "@/lib/prisma"
 import { requireAuth } from "@/lib/auth-utils"
 import { notFound } from "next/navigation"
 import { getTranslations } from "next-intl/server"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Edit, FileSignature, Calendar, Building, User, FileText, ArrowRightLeft } from "lucide-react"
 import Link from "next/link"
 import { formatCurrency, formatDate } from "@/lib/utils"
+
+type Endorsement = {
+    name: string
+    date?: Date | string | null
+    notes?: string | null
+}
+
+function isEndorsement(value: unknown): value is Endorsement {
+    if (!value || typeof value !== "object") return false
+    const record = value as Record<string, unknown>
+    return typeof record.name === "string"
+}
 
 export default async function CheckNoteDetailPage(props: { params: Promise<{ id: string, locale: string }> }) {
     const params = await props.params;
@@ -33,7 +45,7 @@ export default async function CheckNoteDetailPage(props: { params: Promise<{ id:
     }
 
     const directionColors = {
-        GIVEN: "bg-orange-500/10 text-orange-500",
+        ISSUED: "bg-orange-500/10 text-orange-500",
         RECEIVED: "bg-emerald-500/10 text-emerald-500",
     }
 
@@ -46,14 +58,16 @@ export default async function CheckNoteDetailPage(props: { params: Promise<{ id:
     }
 
     // Parse endorsements if they exist
-    let endorsements = []
+    let endorsements: Endorsement[] = []
     try {
         if (checkNote.endorsements && typeof checkNote.endorsements === 'string') {
-            endorsements = JSON.parse(checkNote.endorsements)
+            const parsed = JSON.parse(checkNote.endorsements) as unknown
+            endorsements = Array.isArray(parsed) ? parsed.filter(isEndorsement) : []
         } else if (Array.isArray(checkNote.endorsements)) {
-            endorsements = checkNote.endorsements
+            const storedEndorsements: unknown[] = checkNote.endorsements
+            endorsements = storedEndorsements.filter(isEndorsement)
         }
-    } catch (e) {
+    } catch (_e) {
         // Fallback
     }
 
@@ -206,7 +220,7 @@ export default async function CheckNoteDetailPage(props: { params: Promise<{ id:
                         <CardContent>
                             {endorsements && endorsements.length > 0 ? (
                                 <div className="space-y-4">
-                                    {endorsements.map((endorser: any, idx: number) => (
+                                    {endorsements.map((endorser, idx) => (
                                         <div key={idx} className="flex items-start gap-3 p-3 rounded-md bg-muted/50 border">
                                             <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-bold mt-0.5">
                                                 {idx + 1}

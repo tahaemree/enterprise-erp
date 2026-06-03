@@ -4,6 +4,7 @@ import { type ColumnDef } from "@tanstack/react-table"
 import { Badge } from "@/components/ui/badge"
 import { DataTableColumnHeader } from "@/components/tables/data-table-column-header"
 import { formatDate, formatCurrency } from "@/lib/utils"
+import type { AppTranslator } from "@/lib/i18n-types"
 
 export interface BaBsForm {
     id: string
@@ -31,7 +32,7 @@ const statusConfig: Record<string, { label: string; variant: "default" | "second
     REJECTED: { label: "Rejected", variant: "destructive" },
 }
 
-export const createBaBsColumns = (t: any): ColumnDef<BaBsForm>[] => [
+export const createBaBsColumns = (t: AppTranslator): ColumnDef<BaBsForm>[] => [
     {
         accessorKey: "formType",
         header: ({ column }) => (
@@ -71,7 +72,7 @@ export const createBaBsColumns = (t: any): ColumnDef<BaBsForm>[] => [
         cell: ({ row }) => {
             const status = row.getValue("status") as keyof typeof statusConfig
             const config = statusConfig[status] || { variant: "outline" as const }
-            const label = t.has(`status.${status}`) ? t(`status.${status}`) : status
+            const label = t.has?.(`status.${status}`) ? t(`status.${status}`) : status
             return <Badge variant={config.variant}>{label}</Badge>
         },
     },

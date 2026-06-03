@@ -3,7 +3,6 @@ import { getSuppliers } from "@/lib/actions/suppliers"
 import { getProduct } from "@/lib/actions/products"
 import { ProductForm } from "@/components/inventory/product-form"
 import { notFound } from "next/navigation"
-import { getTranslations } from "next-intl/server"
 
 export default async function NewProductPage(props: {
     params: Promise<{ locale: string }>
@@ -11,7 +10,6 @@ export default async function NewProductPage(props: {
 }) {
     const resolvedSearchParams = await props.searchParams
     const editId = resolvedSearchParams?.edit as string | undefined
-    const t = await getTranslations("productForm")
 
     const [categories, suppliers] = await Promise.all([
         getCategories(),

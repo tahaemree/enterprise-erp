@@ -50,8 +50,8 @@ export function CostCenterForm() {
             } else {
                 toast.error(result.error || t("createError"))
             }
-        } catch (error: any) {
-            toast.error(error.message || t("createError"))
+        } catch (error: unknown) {
+            toast.error(error instanceof Error ? error.message : t("createError"))
         } finally {
             setIsPending(false)
         }

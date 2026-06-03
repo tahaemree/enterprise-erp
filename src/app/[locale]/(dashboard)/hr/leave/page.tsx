@@ -1,9 +1,9 @@
 import { Link } from "@/i18n/navigation"
+import { RoleGate } from "@/components/auth/role-gate"
 import { Plus, Calendar, Clock, Check, X } from "lucide-react"
 import { getTranslations } from "next-intl/server"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { DataTable } from "@/components/tables/data-table"
 import { type LeaveRequest } from "@/components/hr/leave-request-columns"
 import { LeaveRequestsTable } from "@/components/hr/leave-requests-table"
 import { getLeaveRequests } from "@/lib/actions/leave-requests"
@@ -47,12 +47,14 @@ export default async function LeaveRequestsPage({
     return (
         <div className="space-y-6">
             <div className="flex justify-end">
+                <RoleGate allow="MANAGER">
                 <Button asChild>
                     <Link href="/hr/leave/new">
                         <Plus className="mr-2 h-4 w-4" />
                         {t("submitRequest")}
                     </Link>
                 </Button>
+                </RoleGate>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

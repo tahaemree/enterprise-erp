@@ -10,7 +10,7 @@ import {
     type CheckNoteFormValues,
 } from "@/lib/validations/tr-accounting"
 import type { Prisma } from "@prisma/client"
-import { executeAction, fromZodError, NotFoundError, ConflictError, type ActionResult } from "@/lib/errors"
+import { executeAction, fromZodError, type ActionResult } from "@/lib/errors"
 import { MODULE, PATHS } from "@/lib/constants"
 
 // ==================== ÇEK / SENET ====================
@@ -38,7 +38,7 @@ export async function getCheckNotes(params?: PaginationParams) {
     return createPaginatedResult(data.map(mapFn), total, params)
 }
 
-export async function createCheckNote(data: CheckNoteFormValues) : Promise<ActionResult<Prisma.CheckPromissoryNoteGetPayload<{}>>> {
+export async function createCheckNote(data: CheckNoteFormValues) : Promise<ActionResult<Prisma.CheckPromissoryNoteGetPayload<Record<string, never>>>> {
     return executeAction(async () => {
     
         const user = await requireAuth()
@@ -50,7 +50,7 @@ export async function createCheckNote(data: CheckNoteFormValues) : Promise<Actio
     
         const checkNote = await db.checkPromissoryNote.create({
             data: { ...parsed.data, amount: Number(parsed.data.amount) as unknown as Prisma.Decimal, tenantId: user.tenantId },
-        }) as Prisma.CheckPromissoryNoteGetPayload<{}>
+        }) as Prisma.CheckPromissoryNoteGetPayload<Record<string, never>>
     
         logger.info("Check/Promissory note created", { module: MODULE.TR_ACCOUNTING, userId: user.id, checkNoteId: checkNote.id })
         revalidatePath(PATHS.ACCOUNTING_CHECK_NOTES)

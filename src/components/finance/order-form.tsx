@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { useFieldArray, useForm, type Resolver } from "react-hook-form"
+import { useFieldArray, useForm, useWatch, type Resolver } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useTranslations } from "next-intl"
 import { toast } from "sonner"
@@ -28,7 +28,8 @@ import {
 import { Separator } from "@/components/ui/separator"
 import { cn, formatCurrency, generateOrderNumber } from "@/lib/utils"
 
-import { orderSchema, type OrderFormValues, orderItemSchema } from "@/lib/validations/finance"
+import { orderSchema, type OrderFormValues } from "@/lib/validations/finance"
+import { calculateOrderTotals } from "@/lib/order-totals"
 import { getCustomers } from "@/lib/actions/customers"
 import { getProducts } from "@/lib/actions/products"
 import { createOrder} from "@/lib/actions/orders"
@@ -48,7 +49,9 @@ interface ProductOption {
     price: number
 }
 
-export function OrderForm({ initialData }: { initialData?: any }) {
+// initialData is a loosely-typed Order-like entity (e.g. a Prisma Order for
+// edit/duplicate flows); form.reset tolerates extra fields.
+export function OrderForm({ initialData }: { initialData?: Record<string, unknown> }) {
     const t = useTranslations("orderForm")
     const router = useRouter()
     const [isSubmitting, setIsSubmitting] = useState(false)
@@ -81,6 +84,11 @@ export function OrderForm({ initialData }: { initialData?: any }) {
             orderNumber: generateOrderNumber("ORD"),
             status: "PENDING",
             items: [{ productId: "", productName: "", quantity: 1, unitPrice: 0 }],
+            taxRate: 20,
+            discountType: "fixed",
+            discountValue: 0,
+            shippingAmount: 0,
+            currency: "TRY",
             notes: "",
         },
     })
@@ -92,8 +100,22 @@ export function OrderForm({ initialData }: { initialData?: any }) {
         name: "items",
     })
 
-    const watchItems = form.watch("items")
-    const total = watchItems.reduce((sum, item) => sum + (item.quantity || 0) * (item.unitPrice || 0), 0)
+    const watchItems = useWatch({ control: form.control, name: "items" }) ?? []
+    const watchTaxRate = useWatch({ control: form.control, name: "taxRate" })
+    const watchDiscountType = useWatch({ control: form.control, name: "discountType" })
+    const watchDiscountValue = useWatch({ control: form.control, name: "discountValue" })
+    const watchShipping = useWatch({ control: form.control, name: "shippingAmount" })
+
+    const totals = calculateOrderTotals({
+        items: (watchItems ?? []).map((i) => ({
+            quantity: Number(i.quantity) || 0,
+            unitPrice: Number(i.unitPrice) || 0,
+        })),
+        taxRate: Number(watchTaxRate) || 0,
+        discountType: watchDiscountType ?? "fixed",
+        discountValue: Number(watchDiscountValue) || 0,
+        shippingAmount: Number(watchShipping) || 0,
+    })
 
     function handleProductSelect(index: number, productId: string) {
         const product = products.find((p) => p.id === productId)
@@ -116,7 +138,13 @@ export function OrderForm({ initialData }: { initialData?: any }) {
                     quantity: item.quantity,
                     unitPrice: item.unitPrice,
                 })),
-                total,
+                taxRate: data.taxRate,
+                discountType: data.discountType,
+                discountValue: data.discountValue,
+                shippingAmount: data.shippingAmount,
+                currency: data.currency,
+                total: totals.total,
+                notes: data.notes,
             })
             toast.success(t("createSuccess"))
             router.push("/finance/orders")
@@ -200,6 +228,90 @@ export function OrderForm({ initialData }: { initialData?: any }) {
                                 </FormItem>
                             )}
                         />
+
+                        <Separator />
+                        <h3 className="text-lg font-medium">{t("pricing")}</h3>
+                        <div className="grid grid-cols-2 gap-4">
+                            <FormField
+                                control={form.control}
+                                name="taxRate"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>{t("taxRate")}</FormLabel>
+                                        <FormControl>
+                                            <Input
+                                                type="number"
+                                                min="0"
+                                                max="100"
+                                                step="0.01"
+                                                {...field}
+                                                onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="shippingAmount"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>{t("shipping")}</FormLabel>
+                                        <FormControl>
+                                            <Input
+                                                type="number"
+                                                min="0"
+                                                step="0.01"
+                                                {...field}
+                                                onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="discountType"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>{t("discountType")}</FormLabel>
+                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                            <FormControl>
+                                                <SelectTrigger>
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                            </FormControl>
+                                            <SelectContent>
+                                                <SelectItem value="fixed">{t("discountFixed")}</SelectItem>
+                                                <SelectItem value="percentage">{t("discountPercentage")}</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="discountValue"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>{t("discountValue")}</FormLabel>
+                                        <FormControl>
+                                            <Input
+                                                type="number"
+                                                min="0"
+                                                step="0.01"
+                                                {...field}
+                                                onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
                     </div>
 
                     <div className="rounded-lg border bg-card p-6">
@@ -212,12 +324,28 @@ export function OrderForm({ initialData }: { initialData?: any }) {
                             </div>
                             <div className="flex justify-between text-sm">
                                 <span className="text-muted-foreground">{t("subtotal")}</span>
-                                <span>{formatCurrency(total)}</span>
+                                <span>{formatCurrency(totals.subtotal)}</span>
                             </div>
+                            {totals.discountAmount > 0 && (
+                                <div className="flex justify-between text-sm text-red-600 dark:text-red-400">
+                                    <span>{t("discount")}</span>
+                                    <span>-{formatCurrency(totals.discountAmount)}</span>
+                                </div>
+                            )}
+                            <div className="flex justify-between text-sm">
+                                <span className="text-muted-foreground">{t("tax")} (%{Number(watchTaxRate) || 0})</span>
+                                <span>{formatCurrency(totals.taxAmount)}</span>
+                            </div>
+                            {totals.shippingAmount > 0 && (
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-muted-foreground">{t("shipping")}</span>
+                                    <span>{formatCurrency(totals.shippingAmount)}</span>
+                                </div>
+                            )}
                             <Separator />
                             <div className="flex justify-between text-lg font-semibold">
                                 <span>{t("total")}</span>
-                                <span>{formatCurrency(total)}</span>
+                                <span>{formatCurrency(totals.total)}</span>
                             </div>
                         </div>
                     </div>

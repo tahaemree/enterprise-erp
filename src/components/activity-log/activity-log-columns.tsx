@@ -7,10 +7,10 @@
 "use client"
 
 import type { ColumnDef } from "@tanstack/react-table"
-import type { ActivityLog } from "@prisma/client"
 import { formatDateTime } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { DataTableColumnHeader } from "@/components/tables/data-table-column-header"
+import type { AppTranslator } from "@/lib/i18n-types"
 
 // Extended type that includes the user relation
 export interface ActivityLogRow {
@@ -71,7 +71,7 @@ function formatEntityType(entityType: string): string {
     return entityType.replace(/([a-z])([A-Z])/g, '$1 $2')
 }
 
-export function createActivityLogColumns(t: any): ColumnDef<ActivityLogRow>[] {
+export function createActivityLogColumns(t: AppTranslator): ColumnDef<ActivityLogRow>[] {
     return [
         {
             accessorKey: "createdAt",
@@ -130,7 +130,7 @@ export function createActivityLogColumns(t: any): ColumnDef<ActivityLogRow>[] {
         {
             accessorKey: "description",
             header: ({ column }) => (
-                <DataTableColumnHeader column={column} title={t.has("columns.description") ? t("columns.description") : "Açıklama"} />
+                <DataTableColumnHeader column={column} title={t.has?.("columns.description") ? t("columns.description") : "Açıklama"} />
             ),
             cell: ({ row }) => {
                 return (

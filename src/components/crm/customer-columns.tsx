@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { DataTableColumnHeader } from "@/components/tables/data-table-column-header"
 import { formatCurrency, getInitials } from "@/lib/utils"
+import type { AppTranslator } from "@/lib/i18n-types"
 
 export type Customer = {
     id: string
@@ -53,7 +54,7 @@ const statusColors: Record<string, string> = {
     CHURNED: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
 }
 
-export const createCustomerColumns = (t: any, onDelete?: (id: string) => void): ColumnDef<Customer>[] => [
+export const createCustomerColumns = (t: AppTranslator, onDelete?: (id: string) => void): ColumnDef<Customer>[] => [
     {
         id: "select",
         header: ({ table }) => (

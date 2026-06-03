@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { DataTableColumnHeader } from "@/components/tables/data-table-column-header"
 import { formatCurrency, formatDate } from "@/lib/utils"
+import type { AppTranslator } from "@/lib/i18n-types"
 
 export type DespatchAdvice = {
     id: string
@@ -57,13 +58,13 @@ function getStatusBadge(status: string) {
 }
 
 export const createDespatchAdviceColumns = (
-    t: any,
+    t: AppTranslator,
     onDelete?: (id: string) => void,
 ): ColumnDef<DespatchAdvice>[] => [
     {
         accessorKey: "invoiceNumber",
         header: ({ column }) => (
-            <DataTableColumnHeader column={column} title={t("invoiceNumber")} />
+            <DataTableColumnHeader column={column} title={t("accounting.despatchAdvice.despatchNumber")} />
         ),
         cell: ({ row }) => {
             const number = row.getValue("invoiceNumber") as string | null
@@ -78,14 +79,14 @@ export const createDespatchAdviceColumns = (
     {
         accessorKey: "status",
         header: ({ column }) => (
-            <DataTableColumnHeader column={column} title={t("status")} />
+            <DataTableColumnHeader column={column} title={t("accounting.despatchAdvice.status")} />
         ),
         cell: ({ row }) => {
             const status = row.getValue("status") as string
             const variant = getStatusBadge(status)
             return (
                 <Badge variant="secondary" className={variant.className}>
-                    {t.has(`status.${status}`) ? t(`status.${status}`) : variant.label}
+                    {t.has?.(`status.${status}`) ? t(`status.${status}`) : variant.label}
                 </Badge>
             )
         },
@@ -93,7 +94,7 @@ export const createDespatchAdviceColumns = (
     {
         accessorKey: "receiverName",
         header: ({ column }) => (
-            <DataTableColumnHeader column={column} title={t("receiver")} />
+            <DataTableColumnHeader column={column} title={t("accounting.despatchAdvice.receiverName")} />
         ),
         cell: ({ row }) => {
             const adv = row.original
@@ -108,7 +109,7 @@ export const createDespatchAdviceColumns = (
     {
         accessorKey: "netTotal",
         header: ({ column }) => (
-            <DataTableColumnHeader column={column} title={t("total")} />
+            <DataTableColumnHeader column={column} title={t("accounting.despatchAdvice.netTotal")} />
         ),
         cell: ({ row }) => {
             const total = row.getValue("netTotal") as number
@@ -118,7 +119,7 @@ export const createDespatchAdviceColumns = (
     {
         accessorKey: "issueDate",
         header: ({ column }) => (
-            <DataTableColumnHeader column={column} title={t("issueDate")} />
+            <DataTableColumnHeader column={column} title={t("accounting.despatchAdvice.issueDate")} />
         ),
         cell: ({ row }) => {
             return <span className="text-muted-foreground text-sm">{formatDate(row.getValue("issueDate") as Date)}</span>

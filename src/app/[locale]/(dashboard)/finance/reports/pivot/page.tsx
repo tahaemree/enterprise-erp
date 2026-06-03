@@ -3,7 +3,6 @@
 import { useState, useTransition } from "react"
 import { useTranslations } from "next-intl"
 import { Loader2, Table2 } from "lucide-react"
-import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 import { PivotTable, getPivotPresets, type PivotPresetKey } from "@/components/reports/pivot-table"

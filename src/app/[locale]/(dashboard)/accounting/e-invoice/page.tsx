@@ -1,10 +1,10 @@
 import { Link } from "@/i18n/navigation"
-import { Plus, FileDigit, FileArchive, Truck, Send, Ban, RefreshCw } from "lucide-react"
+import { RoleGate } from "@/components/auth/role-gate"
+import { Plus, FileDigit, Truck, Send, Ban } from "lucide-react"
 import { getTranslations } from "next-intl/server"
 import { Button } from "@/components/ui/button"
 import { EInvoicesTable } from "@/components/accounting/einvoices-table"
 import { type EInvoice } from "@/components/accounting/einvoice-columns"
-import { formatCurrency } from "@/lib/utils"
 import { getEInvoices } from "@/lib/actions/tr-accounting"
 
 export default async function EInvoiceListPage({
@@ -42,7 +42,6 @@ export default async function EInvoiceListPage({
         createdAt: inv.createdAt,
     }))
 
-    const totalNet = invoices.reduce((sum, i) => sum + i.netTotal, 0)
     const acceptedCount = invoices.filter(i => i.status === "GIB_ACCEPTED").length
     const draftCount = invoices.filter(i => i.status === "DRAFT").length
     const errorCount = invoices.filter(i => i.status === "ERROR").length
@@ -60,12 +59,14 @@ export default async function EInvoiceListPage({
                             {t("goToDespatch")}
                         </Link>
                     </Button>
+                    <RoleGate allow="MANAGER">
                     <Button asChild>
                         <Link href="/accounting/e-invoice/new">
                             <Plus className="mr-2 h-4 w-4" />
                             {t("newEinvoice")}
                         </Link>
                     </Button>
+                    </RoleGate>
                 </div>
             </div>
 

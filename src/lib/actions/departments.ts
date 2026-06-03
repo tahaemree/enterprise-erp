@@ -9,8 +9,7 @@ import { getPaginationArgs, createPaginatedResult, type PaginationParams, type P
 import { getTenantPrisma } from "@/lib/prisma"
 import { validatedActionWithRole } from "@/lib/action-wrapper"
 import { activityLogService } from "@/services/activity-log.service"
-import { ENTITY_TYPE, PATHS, MODULE } from "@/lib/constants"
-import logger from "@/lib/logger"
+import { ENTITY_TYPE, PATHS } from "@/lib/constants"
 
 export type DepartmentWithManager = {
     id: string

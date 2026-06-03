@@ -151,7 +151,15 @@ export function fromZodError(error: import("zod").ZodError): ValidationError {
  */
 export type ActionResult<T = void> =
     | { ok: true; data: T }
-    | { ok: false; error: string; code?: string; fieldErrors?: Record<string, string[]>; statusCode?: number }
+    | {
+          ok: false
+          error: string
+          code?: string
+          fieldErrors?: Record<string, string[]>
+          statusCode?: number
+          /** Correlation id — surface to users as a support reference. */
+          requestId?: string
+      }
 
 /**
  * Wraps a successful result into ActionResult
@@ -178,6 +186,47 @@ export function failure(
  * Safely executes an action and wraps the result in ActionResult.
  * Catches AppError, ZodError, and generic errors.
  */
+/**
+ * Next.js uses thrown errors as control flow for `redirect()` and `notFound()`.
+ * These carry a `digest` like "NEXT_REDIRECT" / "NEXT_NOT_FOUND" and MUST be
+ * re-thrown so the framework can act on them — never swallowed into a result.
+ */
+function isNextControlFlowError(error: unknown): boolean {
+    const digest = (error as { digest?: unknown } | null)?.digest
+    return typeof digest === "string" && digest.startsWith("NEXT_")
+}
+
+/** Resolve the current request's correlation id (lazy, request-context aware). */
+async function currentRequestId(): Promise<string> {
+    const { getRequestId } = await import("@/lib/request-context")
+    return getRequestId()
+}
+
+/**
+ * Logs unexpected (5xx / unclassified) failures with the request correlation
+ * id and full error context. Expected domain errors (validation, auth, 4xx)
+ * are NOT logged here — they are normal control flow, not incidents.
+ *
+ * Both the logger and request-context are imported lazily so this module stays
+ * free of server-only dependencies for any type-only consumer.
+ */
+async function reportUnexpected(error: unknown, requestId: string): Promise<void> {
+    try {
+        const [{ default: logger }] = await Promise.all([import("@/lib/logger")])
+        logger.error("Unhandled action error", {
+            module: "action",
+            requestId,
+            error: {
+                message: error instanceof Error ? error.message : String(error),
+                name: error instanceof Error ? error.name : undefined,
+                stack: error instanceof Error ? error.stack : undefined,
+            },
+        })
+    } catch {
+        // Never let logging failure mask the original error.
+    }
+}
+
 export async function executeAction<T>(
     fn: () => Promise<T>
 ): Promise<ActionResult<T>> {
@@ -185,10 +234,21 @@ export async function executeAction<T>(
         const data = await fn()
         return { ok: true, data }
     } catch (error) {
+        // redirect()/notFound() use thrown errors as control flow — re-throw.
+        if (isNextControlFlowError(error)) throw error
+
         if (error instanceof Error && (error.message.includes("rate limit") || error.message.includes("rate limit exceeded"))) {
             return { ok: false, error: "Too many requests. Please try again later.", statusCode: 429, code: "RATE_LIMITED" }
         }
         if (error instanceof AppError) {
+            // Client faults (4xx: validation, auth, conflict) are expected and
+            // need no correlation id. Server faults (5xx) are incidents: log
+            // them with a correlation id the user can quote to support.
+            if (error.statusCode >= 500) {
+                const requestId = await currentRequestId()
+                await reportUnexpected(error, requestId)
+                return { ok: false, error: error.message, code: error.code, statusCode: error.statusCode, requestId }
+            }
             return {
                 ok: false,
                 error: error.message,
@@ -210,9 +270,12 @@ export async function executeAction<T>(
                 ...(ve.fieldErrors ? { fieldErrors: ve.fieldErrors } : {}),
             }
         }
+        // Anything reaching here is unclassified → a 5xx incident.
+        const requestId = await currentRequestId()
+        await reportUnexpected(error, requestId)
         if (error instanceof Error) {
-            return { ok: false, error: error.message, statusCode: 500 }
+            return { ok: false, error: error.message, statusCode: 500, requestId }
         }
-        return { ok: false, error: "An unexpected error occurred", statusCode: 500 }
+        return { ok: false, error: "An unexpected error occurred", statusCode: 500, requestId }
     }
 }

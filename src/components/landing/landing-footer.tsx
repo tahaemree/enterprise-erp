@@ -34,9 +34,7 @@ const COLUMNS = [
   },
 ];
 
-import { useTranslations } from 'next-intl';
 export default function LandingFooter() {
-  const t = useTranslations('marketing.footer');
   return (
     <footer className="relative z-10 border-t border-neutral-200 bg-white">
       <div className="mx-auto max-w-[1240px] px-6 py-16">

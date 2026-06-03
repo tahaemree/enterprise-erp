@@ -20,7 +20,9 @@ model Tenant {
   logo      String?
   plan      Plan     @default(FREE)
   isActive  Boolean  @default(true)
-  apiKey    String?  @unique // Used for API integration (v1)
+  apiKey       String?  @unique // DEPRECATED: legacy plaintext key, kept only for backfill + fallback. Remove after rotation.
+  apiKeyPrefix String?  @unique // Non-secret indexed lookup prefix (see src/lib/api-key.ts)
+  apiKeyHash   String?  // SHA-256 hash of the API token — never store plaintext
   taxId     String?  // VKN/TCKN (e-Belge sender)
   taxOffice String?  // Vergi dairesi (opsiyonel)
   createdAt DateTime @default(now())
@@ -286,8 +288,8 @@ model Product {
   description String?
   sku         String
   barcode     String?
-  price       Decimal  @db.Decimal(10, 2)
-  costPrice   Decimal? @db.Decimal(10, 2)
+  price       Decimal  @db.Decimal(18, 2)
+  costPrice   Decimal? @db.Decimal(18, 2)
   quantity    Decimal  @default(0) @db.Decimal(10, 3)
   minStock    Decimal  @default(10) @db.Decimal(10, 3)
   maxStock    Decimal? @db.Decimal(10, 3)
@@ -382,7 +384,7 @@ model Customer {
   taxId       String?        // Encrypted field (KVKK) - T.C. Kimlik / Vergi No
   taxOffice   String?        // Vergi Dairesi
   
-  totalSpent  Decimal        @default(0) @db.Decimal(10, 2)
+  totalSpent  Decimal        @default(0) @db.Decimal(18, 2)
   orderCount  Int            @default(0)
   lastOrderAt DateTime?
   createdAt   DateTime       @default(now())
@@ -477,15 +479,15 @@ model Order {
   id              String      @id @default(cuid())
   orderNumber     String
   status          OrderStatus @default(PENDING)
-  subtotal        Decimal     @db.Decimal(10, 2)
+  subtotal        Decimal     @db.Decimal(18, 2)
   taxRate         Decimal     @default(0) @db.Decimal(5, 2) // Default KDV
-  taxAmount       Decimal     @default(0) @db.Decimal(10, 2)
+  taxAmount       Decimal     @default(0) @db.Decimal(18, 2)
   taxDetails      Json?       // Multi-tax support (Tevkifat, ÖTV, vs.)
   discountType    String?     @default("fixed") // "fixed" or "percentage"
-  discountValue   Decimal     @default(0) @db.Decimal(10, 2)
-  discountAmount  Decimal     @default(0) @db.Decimal(10, 2)
-  shippingAmount  Decimal     @default(0) @db.Decimal(10, 2)
-  total           Decimal     @db.Decimal(10, 2)
+  discountValue   Decimal     @default(0) @db.Decimal(18, 2)
+  discountAmount  Decimal     @default(0) @db.Decimal(18, 2)
+  shippingAmount  Decimal     @default(0) @db.Decimal(18, 2)
+  total           Decimal     @db.Decimal(18, 2)
   currency        String      @default("USD")
   exchangeRate    Decimal?    @db.Decimal(14, 6) // Snapshot exchange rate
   notes           String?
@@ -544,11 +546,11 @@ enum OrderStatus {
 model OrderItem {
   id          String   @id @default(cuid())
   quantity    Decimal  @db.Decimal(10, 3)
-  unitPrice   Decimal  @db.Decimal(10, 2)
-  discount    Decimal  @default(0) @db.Decimal(10, 2)
+  unitPrice   Decimal  @db.Decimal(18, 2)
+  discount    Decimal  @default(0) @db.Decimal(18, 2)
   taxRate     Decimal  @default(0) @db.Decimal(5, 2) // Snapshot
-  taxAmount   Decimal  @default(0) @db.Decimal(10, 2) // Snapshot
-  total       Decimal  @db.Decimal(10, 2)
+  taxAmount   Decimal  @default(0) @db.Decimal(18, 2) // Snapshot
+  total       Decimal  @db.Decimal(18, 2)
   productName String // Denormalized for historical accuracy
   productSku  String // Denormalized for historical accuracy
   notes       String?
@@ -570,7 +572,7 @@ model Transaction {
   id          String            @id @default(cuid())
   type        TransactionType
   category    String?
-  amount      Decimal           @db.Decimal(10, 2)
+  amount      Decimal           @db.Decimal(18, 2)
   currency    String            @default("USD")
   exchangeRate Decimal?         @db.Decimal(14, 6) // Tarihsel Kur Snapshot
   description String?
@@ -629,7 +631,7 @@ model Department {
   description String?
   code        String?
   color       String?
-  budget      Decimal? @db.Decimal(10, 2)
+  budget      Decimal? @db.Decimal(18, 2)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -668,7 +670,7 @@ model Employee {
   hireDate         DateTime
   terminationDate  DateTime?
   position         String
-  salary           Decimal?       @db.Decimal(10, 2)
+  salary           Decimal?       @db.Decimal(18, 2)
   salaryType       String         @default("monthly") // hourly, monthly, yearly
   employmentType   EmploymentType @default(FULL_TIME)
   status           EmployeeStatus @default(ACTIVE)

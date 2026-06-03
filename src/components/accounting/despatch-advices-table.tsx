@@ -2,6 +2,7 @@
 
 import { DataTable } from "@/components/tables/data-table"
 import { createDespatchAdviceColumns, type DespatchAdvice } from "./despatch-advice-columns"
+import { useTranslations } from "next-intl"
 
 interface DespatchAdvicesTableProps {
     data: DespatchAdvice[]
@@ -9,14 +10,15 @@ interface DespatchAdvicesTableProps {
 }
 
 export function DespatchAdvicesTable({ data, onDelete }: DespatchAdvicesTableProps) {
-    const columns = createDespatchAdviceColumns(onDelete)
+    const t = useTranslations()
+    const columns = createDespatchAdviceColumns(t, onDelete)
 
     return (
         <DataTable
             columns={columns}
             data={data}
             searchKey="receiverName"
-            searchPlaceholder="Search by receiver name..."
+            searchPlaceholder={t("accounting.despatchAdvice.receiverName")}
         />
     )
 }

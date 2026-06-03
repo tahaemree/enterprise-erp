@@ -3,6 +3,20 @@ import authConfig from "../auth.config"
 import createIntlMiddleware from "next-intl/middleware"
 import { NextRequest, NextResponse } from "next/server"
 import { routing } from "./i18n/routing"
+import { REQUEST_ID_HEADER } from "./lib/request-context"
+
+/**
+ * Ensure the request carries a correlation id and echo it on the response so
+ * clients (and logs) can reference a single id for the whole request.
+ * Mutating the request headers means server components / actions read the same
+ * id via `getRequestId()`.
+ */
+function withRequestId(req: NextRequest, res: Response | NextResponse | undefined) {
+    const requestId = req.headers.get(REQUEST_ID_HEADER) ?? crypto.randomUUID()
+    req.headers.set(REQUEST_ID_HEADER, requestId)
+    if (res) res.headers.set(REQUEST_ID_HEADER, requestId)
+    return res
+}
 
 const { auth } = NextAuth(authConfig)
 const intlMiddleware = createIntlMiddleware(routing)
@@ -28,7 +42,7 @@ for (const page of PUBLIC_PAGES) {
 }
 
 /**
- * Optimized middleware: single-pass auth + i18n handling.
+ * Optimized proxy: single-pass auth + i18n handling.
  * Precomputed PUBLIC_PATHS Set enables O(1) public page lookups.
  */
 const authMiddleware = auth((req) => {
@@ -52,7 +66,7 @@ const authMiddleware = auth((req) => {
         return intlMiddleware(req)
     }
 
-    // Protected route — require authentication
+    // Protected route - require authentication
     if (!isLoggedIn) {
         const locale = localePrefixes.find((p) => pathname.startsWith(p))?.slice(1) || routing.defaultLocale
         return Response.redirect(new URL(`/${locale}/login`, req.url))
@@ -61,14 +75,23 @@ const authMiddleware = auth((req) => {
     return intlMiddleware(req)
 })
 
-export default function middleware(req: NextRequest, _event: unknown) {
+export async function proxy(req: NextRequest, _event: unknown) {
     // next-auth beta has a bug where it overrides redirect statuses (e.g. from 307 to 404)
     // Also, next-intl middleware might fail to redirect the root path if wrapped or matched strangely.
     // Manually redirect the root path to the default locale.
     if (req.nextUrl.pathname === "/") {
-        return NextResponse.redirect(new URL(`/${routing.defaultLocale}`, req.url))
+        return withRequestId(req, NextResponse.redirect(new URL(`/${routing.defaultLocale}`, req.url)))
     }
-    return (authMiddleware as (req: NextRequest, event: unknown) => Response | NextResponse | void)(req, _event)
+
+    const run = authMiddleware as (
+        req: NextRequest,
+        event: unknown
+    ) => Response | NextResponse | void | Promise<Response | NextResponse | void>
+    const result = await run(req, _event)
+
+    // A void result means "continue" — materialize a NextResponse so the
+    // correlation id is still echoed on the outgoing response.
+    return withRequestId(req, result ?? NextResponse.next())
 }
 
 export const config = {

@@ -1,7 +1,7 @@
 "use server"
 
 import { requireAuth } from "@/lib/auth-utils"
-import { categorySchema, type CategoryFormValues } from "@/lib/validations/inventory"
+import { categorySchema } from "@/lib/validations/inventory"
 import type { Prisma } from "@prisma/client"
 import { NotFoundError } from "@/lib/errors"
 import { getPaginationArgs, createPaginatedResult, type PaginationParams, type PaginatedResult } from "@/lib/pagination"

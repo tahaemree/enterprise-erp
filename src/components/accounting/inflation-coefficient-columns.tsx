@@ -2,7 +2,6 @@
 
 import { type ColumnDef } from "@tanstack/react-table"
 import { DataTableColumnHeader } from "@/components/tables/data-table-column-header"
-import { useTranslations } from "next-intl"
 import { formatDate } from "@/lib/utils"
 
 export interface InflationCoefficient {

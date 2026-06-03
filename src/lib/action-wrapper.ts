@@ -30,7 +30,7 @@
 import { type z } from "zod"
 import { revalidatePath } from "next/cache"
 import { getTenantPrisma } from "@/lib/prisma"
-import { requireAuth, requireManager, type AuthenticatedUser } from "@/lib/auth-utils"
+import { requireAdmin, requireAuth, requireManager, type AuthenticatedUser } from "@/lib/auth-utils"
 import { executeAction, type ActionResult, fromZodError } from "@/lib/errors"
 import logger from "@/lib/logger"
 import { activityLogService, type EntityType, type LogAction } from "@/services/activity-log.service"
@@ -78,6 +78,16 @@ type LogConfig = {
     description: string | ((result: unknown) => string)
 }
 
+type RequiredRole = "MANAGER" | "ADMIN"
+
+function enforceRole(user: Pick<AuthenticatedUser, "role">, role: RequiredRole): void {
+    if (role === "ADMIN") {
+        requireAdmin(user)
+        return
+    }
+    requireManager(user)
+}
+
 // ─── Core Wrappers ───────────────────────────────────────────────────────
 
 /**
@@ -114,13 +124,13 @@ export function withAuthArgs<T, A extends unknown[]>(
  * Requires MANAGER role or higher by default. Pass a custom role check function for complex scenarios.
  */
 export function withRole<T>(
-    role: "MANAGER" | "ADMIN",
+    role: RequiredRole,
     handler: ActionHandler<T>
 ): () => Promise<ActionResult<T>> {
     return async () =>
         executeAction(async () => {
             const user = await requireAuth()
-            requireManager(user) // ADMIN also satisfies this due to role hierarchy
+            enforceRole(user, role)
             const db = getTenantPrisma(user.tenantId)
             return handler({ user, db })
         })
@@ -130,13 +140,13 @@ export function withRole<T>(
  * Wraps an action with auth + role check + arguments support.
  */
 export function withRoleArgs<T, A extends unknown[]>(
-    role: "MANAGER" | "ADMIN",
+    role: RequiredRole,
     handler: (ctx: ActionContext, ...args: A) => Promise<T>
 ): (...args: A) => Promise<ActionResult<T>> {
     return async (...args: A) =>
         executeAction(async () => {
             const user = await requireAuth()
-            requireManager(user)
+            enforceRole(user, role)
             const db = getTenantPrisma(user.tenantId)
             return handler({ user, db }, ...args)
         })
@@ -168,14 +178,14 @@ export function withValidation<T, S extends z.ZodType>(
  * Wraps an action with auth + role check + Zod validation.
  */
 export function withValidationAndRole<T, S extends z.ZodType>(
-    role: "MANAGER" | "ADMIN",
+    role: RequiredRole,
     schema: S,
     handler: ValidatedHandler<T, z.infer<S>>
 ): (data: unknown) => Promise<ActionResult<T>> {
     return async (data: unknown) =>
         executeAction(async () => {
             const user = await requireAuth()
-            requireManager(user)
+            enforceRole(user, role)
             const db = getTenantPrisma(user.tenantId)
 
             const parsed = schema.safeParse(data)
@@ -317,7 +327,7 @@ export function validatedAction<TRes, TSchema extends z.ZodType>(
  * Combinator: validates input, runs the handler (with role check), then logs + revalidates.
  */
 export function validatedActionWithRole<TRes, TSchema extends z.ZodType>(
-    role: "MANAGER" | "ADMIN",
+    role: RequiredRole,
     schema: TSchema,
     entityType: EntityType,
     revalidatePathArg: string,
@@ -328,7 +338,7 @@ export function validatedActionWithRole<TRes, TSchema extends z.ZodType>(
     return async (data: unknown) =>
         executeAction(async () => {
             const user = await requireAuth()
-            requireManager(user)
+            enforceRole(user, role)
             const db = getTenantPrisma(user.tenantId)
 
             const parsed = schema.safeParse(data)

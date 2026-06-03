@@ -1,4 +1,5 @@
 import { Link } from "@/i18n/navigation"
+import { RoleGate } from "@/components/auth/role-gate"
 import { Plus, FileText, ArrowDownCircle, ArrowUpCircle, RefreshCw } from "lucide-react"
 import { getTranslations } from "next-intl/server"
 import { Button } from "@/components/ui/button"
@@ -34,10 +35,6 @@ export default async function AccountEntriesPage({
         (sum, e) => sum + e.lines.filter((l) => l.side === "DEBIT").reduce((s, l) => s + l.amount, 0),
         0
     )
-    const totalCredit = entries.reduce(
-        (sum, e) => sum + e.lines.filter((l) => l.side === "CREDIT").reduce((s, l) => s + l.amount, 0),
-        0
-    )
     const debitNotes = entries.filter((e) => e.entryType === "DEBIT_NOTE").length
     const creditNotes = entries.filter((e) => e.entryType === "CREDIT_NOTE").length
 
@@ -48,12 +45,14 @@ export default async function AccountEntriesPage({
                     <h1 className="text-3xl font-bold tracking-tight">{t("title")}</h1>
                     <p className="text-muted-foreground">{t("description")}</p>
                 </div>
+                <RoleGate allow="MANAGER">
                 <Button asChild>
                     <Link href="/accounting/entries/new">
                         <Plus className="mr-2 h-4 w-4" />
                         {t("addEntry")}
                     </Link>
                 </Button>
+                </RoleGate>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

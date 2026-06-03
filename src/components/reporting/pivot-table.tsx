@@ -34,9 +34,12 @@ export function PivotTable<TData, TValue>({
     data,
     initialGrouping = [],
 }: PivotTableProps<TData, TValue>) {
+    "use no memo"
+
     const [grouping, setGrouping] = React.useState<GroupingState>(initialGrouping)
     const [expanded, setExpanded] = React.useState<ExpandedState>({})
 
+    // eslint-disable-next-line react-hooks/incompatible-library -- TanStack Table uses interior mutability; this wrapper is opted out with "use no memo".
     const table = useReactTable({
         data,
         columns,

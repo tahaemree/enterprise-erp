@@ -1,4 +1,5 @@
 import { Link } from "@/i18n/navigation"
+import { RoleGate } from "@/components/auth/role-gate"
 import { Plus, Landmark, CreditCard, Wallet, Building2 } from "lucide-react"
 import { getTranslations } from "next-intl/server"
 import { Button } from "@/components/ui/button"
@@ -51,12 +52,14 @@ export default async function AccountingBankAccountsPage({
                         <Building2 className="h-4 w-4" />
                         <span>{t("accounting.bankAccounts.activeAccounts", { count: activeAccounts })}</span>
                     </div>
+                    <RoleGate allow="MANAGER">
                     <Button asChild>
                         <Link href="/accounting/bank-accounts/new">
                             <Plus className="mr-2 h-4 w-4" />
                             {t("accounting.bankAccounts.addAccount")}
                         </Link>
                     </Button>
+                    </RoleGate>
                 </div>
             </div>
 

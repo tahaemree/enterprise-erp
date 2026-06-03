@@ -1,4 +1,5 @@
 import { Link } from "@/i18n/navigation"
+import { RoleGate } from "@/components/auth/role-gate"
 import { Plus, Percent, BadgeCheck, Layers, AlertCircle } from "lucide-react"
 import { getTranslations } from "next-intl/server"
 import { Button } from "@/components/ui/button"
@@ -44,12 +45,14 @@ export default async function TaxTypesPage({
                             {t("accounting.taxTypes.taxCalculator")}
                         </Link>
                     </Button>
+                    <RoleGate allow="MANAGER">
                     <Button asChild>
                         <Link href="/accounting/tax-types/new">
                             <Plus className="mr-2 h-4 w-4" />
                             {t("accounting.taxTypes.newTaxType")}
                         </Link>
                     </Button>
+                    </RoleGate>
                 </div>
             </div>
 

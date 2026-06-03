@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils"
 import { Package, TrendingUp, Users, Receipt, Filter } from "lucide-react"
 
 import type { PivotResult } from "@/lib/services/reporting-engine"
+import type { AppTranslator } from "@/lib/i18n-types"
 
 interface Props {
     data: PivotResult
@@ -110,52 +111,52 @@ export function PivotTable({ data, title, description }: Props) {
 /**
  * Pre-built pivot configurations for common reports
  */
-export const getPivotPresets = (t: any) => ({
+export const getPivotPresets = (t: AppTranslator) => ({
     revenueByCategory: {
-        name: t.has("pivot.revenueByCategory") ? t("pivot.revenueByCategory") : "Revenue by Category",
+        name: t.has?.("pivot.revenueByCategory") ? t("pivot.revenueByCategory") : "Revenue by Category",
         icon: TrendingUp,
         config: {
-            rows: [{ field: "category", label: t.has("pivot.category") ? t("pivot.category") : "Category" }],
-            columns: [{ field: "type", label: t.has("pivot.type") ? t("pivot.type") : "Type" }],
-            values: [{ field: "amount", label: t.has("pivot.amount") ? t("pivot.amount") : "Amount", aggregation: "sum" as const }],
+            rows: [{ field: "category", label: t.has?.("pivot.category") ? t("pivot.category") : "Category" }],
+            columns: [{ field: "type", label: t.has?.("pivot.type") ? t("pivot.type") : "Type" }],
+            values: [{ field: "amount", label: t.has?.("pivot.amount") ? t("pivot.amount") : "Amount", aggregation: "sum" as const }],
             filters: { type: "INCOME" },
         },
     },
     expensesByCategory: {
-        name: t.has("pivot.expensesByCategory") ? t("pivot.expensesByCategory") : "Expenses by Category",
+        name: t.has?.("pivot.expensesByCategory") ? t("pivot.expensesByCategory") : "Expenses by Category",
         icon: Receipt,
         config: {
-            rows: [{ field: "category", label: t.has("pivot.category") ? t("pivot.category") : "Category" }],
-            columns: [{ field: "type", label: t.has("pivot.type") ? t("pivot.type") : "Type" }],
-            values: [{ field: "amount", label: t.has("pivot.amount") ? t("pivot.amount") : "Amount", aggregation: "sum" as const }],
+            rows: [{ field: "category", label: t.has?.("pivot.category") ? t("pivot.category") : "Category" }],
+            columns: [{ field: "type", label: t.has?.("pivot.type") ? t("pivot.type") : "Type" }],
+            values: [{ field: "amount", label: t.has?.("pivot.amount") ? t("pivot.amount") : "Amount", aggregation: "sum" as const }],
             filters: { type: "EXPENSE" },
         },
     },
     monthlyRevenue: {
-        name: t.has("pivot.monthlyRevenue") ? t("pivot.monthlyRevenue") : "Monthly Revenue",
+        name: t.has?.("pivot.monthlyRevenue") ? t("pivot.monthlyRevenue") : "Monthly Revenue",
         icon: TrendingUp,
         config: {
-            rows: [{ field: "date", label: t.has("pivot.date") ? t("pivot.date") : "Month" }],
-            columns: [{ field: "type", label: t.has("pivot.type") ? t("pivot.type") : "Type" }],
-            values: [{ field: "amount", label: t.has("pivot.amount") ? t("pivot.amount") : "Amount", aggregation: "sum" as const }],
+            rows: [{ field: "date", label: t.has?.("pivot.date") ? t("pivot.date") : "Month" }],
+            columns: [{ field: "type", label: t.has?.("pivot.type") ? t("pivot.type") : "Type" }],
+            values: [{ field: "amount", label: t.has?.("pivot.amount") ? t("pivot.amount") : "Amount", aggregation: "sum" as const }],
         },
     },
     customerRevenue: {
-        name: t.has("pivot.customerRevenue") ? t("pivot.customerRevenue") : "Revenue by Customer",
+        name: t.has?.("pivot.customerRevenue") ? t("pivot.customerRevenue") : "Revenue by Customer",
         icon: Users,
         config: {
-            rows: [{ field: "customer_company", label: t.has("pivot.company") ? t("pivot.company") : "Company" }],
-            columns: [{ field: "customer_status", label: t.has("pivot.customerStatus") ? t("pivot.customerStatus") : "Customer Status" }],
-            values: [{ field: "order_total", label: t.has("pivot.orderTotal") ? t("pivot.orderTotal") : "Order Total", aggregation: "sum" as const }],
+            rows: [{ field: "customer_company", label: t.has?.("pivot.company") ? t("pivot.company") : "Company" }],
+            columns: [{ field: "customer_status", label: t.has?.("pivot.customerStatus") ? t("pivot.customerStatus") : "Customer Status" }],
+            values: [{ field: "order_total", label: t.has?.("pivot.orderTotal") ? t("pivot.orderTotal") : "Order Total", aggregation: "sum" as const }],
         },
     },
     productPerformance: {
-        name: t.has("pivot.productPerformance") ? t("pivot.productPerformance") : "Product Performance",
+        name: t.has?.("pivot.productPerformance") ? t("pivot.productPerformance") : "Product Performance",
         icon: Package,
         config: {
-            rows: [{ field: "category", label: t.has("pivot.productCategory") ? t("pivot.productCategory") : "Product Category" }],
-            columns: [{ field: "type", label: t.has("pivot.transactionType") ? t("pivot.transactionType") : "Transaction Type" }],
-            values: [{ field: "amount", label: t.has("pivot.amount") ? t("pivot.amount") : "Amount", aggregation: "sum" as const }],
+            rows: [{ field: "category", label: t.has?.("pivot.productCategory") ? t("pivot.productCategory") : "Product Category" }],
+            columns: [{ field: "type", label: t.has?.("pivot.transactionType") ? t("pivot.transactionType") : "Transaction Type" }],
+            values: [{ field: "amount", label: t.has?.("pivot.amount") ? t("pivot.amount") : "Amount", aggregation: "sum" as const }],
         },
     },
 })

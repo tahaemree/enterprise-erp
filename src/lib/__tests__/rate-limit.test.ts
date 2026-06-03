@@ -4,14 +4,43 @@ import { checkRateLimit, resetRateLimit } from "@/lib/rate-limit"
 // In-memory store for rate limit testing
 const rateLimitStore = new Map<string, { count: number; windowStart: Date }>()
 
+type RateLimitWhere = {
+    key_windowStart: {
+        key: string
+        windowStart: Date
+    }
+}
+
+type RateLimitCreate = {
+    count: number
+    windowStart: Date
+}
+
+type RateLimitUpsertArgs = {
+    where: RateLimitWhere
+    update: Record<string, unknown>
+    create: RateLimitCreate
+}
+
+type RateLimitUpdateArgs = {
+    where: RateLimitWhere
+    data: Record<string, unknown>
+}
+
+type RateLimitDeleteManyArgs = {
+    where: {
+        key?: string
+    }
+}
+
 // Mock Prisma to use in-memory store
 vi.mock("@/lib/prisma", () => ({
     basePrisma: {
         rateLimit: {
-            upsert: vi.fn(async ({ where, update, create }: any) => {
+            upsert: vi.fn(async ({ where, update: _update, create }: RateLimitUpsertArgs) => {
                 const key = where.key_windowStart.key
                 const existing = rateLimitStore.get(key)
-                const windowStart = where.key_windowStart.windowStart
+                const _windowStart = where.key_windowStart.windowStart
 
                 if (existing) {
                     existing.count += 1
@@ -23,14 +52,14 @@ vi.mock("@/lib/prisma", () => ({
                 rateLimitStore.set(key, record)
                 return record
             }),
-            update: vi.fn(async ({ where, data }: any) => {
+            update: vi.fn(async ({ where, data: _data }: RateLimitUpdateArgs) => {
                 const key = where.key_windowStart.key
                 const existing = rateLimitStore.get(key)!
                 existing.count += 1
                 rateLimitStore.set(key, existing)
                 return { count: existing.count, windowStart: existing.windowStart }
             }),
-            deleteMany: vi.fn(async ({ where }: any) => {
+            deleteMany: vi.fn(async ({ where }: RateLimitDeleteManyArgs) => {
                 if (where.key) {
                     rateLimitStore.delete(where.key)
                 } else {

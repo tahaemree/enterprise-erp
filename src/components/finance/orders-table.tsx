@@ -27,7 +27,7 @@ export function OrdersTable({ data, pageCount, pagination }: OrdersTableProps) {
                 await deleteOrder({ id })
                 toast.success(t("common.deleteSuccess"))
                 router.refresh()
-            } catch (error) {
+            } catch (_error) {
                 toast.error(t("common.deleteError"))
             }
         })
@@ -54,17 +54,19 @@ export function OrdersTable({ data, pageCount, pagination }: OrdersTableProps) {
     const columns = createOrderColumns(t, handleDelete)
 
     return (
-        <DataTable
-            columns={columns}
-            data={data}
-            searchKey="orderNumber"
-            searchPlaceholder={t("finance.orders.searchOrders")}
-            manualPagination={true}
-            manualFiltering={true}
-            pageCount={pageCount}
-            pagination={pagination}
-            onPaginationChange={handlePaginationChange}
-            onSearchChange={handleSearchChange}
-        />
+        <div className={isPending ? "opacity-50 pointer-events-none transition-opacity" : ""}>
+            <DataTable
+                columns={columns}
+                data={data}
+                searchKey="orderNumber"
+                searchPlaceholder={t("finance.orders.searchOrders")}
+                manualPagination={true}
+                manualFiltering={true}
+                pageCount={pageCount}
+                pagination={pagination}
+                onPaginationChange={handlePaginationChange}
+                onSearchChange={handleSearchChange}
+            />
+        </div>
     )
 }

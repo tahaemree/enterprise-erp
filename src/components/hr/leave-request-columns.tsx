@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { DataTableColumnHeader } from "@/components/tables/data-table-column-header"
 import { formatDate, getInitials } from "@/lib/utils"
+import type { AppTranslator } from "@/lib/i18n-types"
 
 export type LeaveRequest = {
     id: string
@@ -111,7 +112,7 @@ function calculateDays(startDate: Date, endDate: Date): number {
     return diffDays + 1 // Include both start and end days
 }
 
-export const createLeaveRequestColumns = (t: any): ColumnDef<LeaveRequest>[] => [
+export const createLeaveRequestColumns = (t: AppTranslator): ColumnDef<LeaveRequest>[] => [
     {
         accessorKey: "employee",
         header: ({ column }) => (

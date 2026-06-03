@@ -1,16 +1,14 @@
 "use server"
 
-import { revalidatePath } from "next/cache"
 import { getTenantPrisma } from "@/lib/prisma"
 import { requireAuth } from "@/lib/auth-utils"
-import { employeeSchema, type EmployeeFormData } from "@/lib/validations/hr"
+import { employeeSchema } from "@/lib/validations/hr"
 import type { Prisma } from "@prisma/client"
-import logger from "@/lib/logger"
-import { NotFoundError, type ActionResult } from "@/lib/errors"
+import { NotFoundError } from "@/lib/errors"
 import { validatedActionWithRole } from "@/lib/action-wrapper"
 import { getPaginationArgs, createPaginatedResult, type PaginationParams, type PaginatedResult } from "@/lib/pagination"
 import { serializePrisma } from "@/lib/utils"
-import { ENTITY_TYPE, MODULE, PATHS } from "@/lib/constants"
+import { ENTITY_TYPE, PATHS } from "@/lib/constants"
 import { z } from "zod"
 
 export type EmployeeWithDepartment = Prisma.EmployeeGetPayload<{ include: { department: true } }>

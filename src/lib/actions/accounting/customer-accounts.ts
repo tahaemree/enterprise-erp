@@ -10,7 +10,7 @@ import {
     type CustomerAccountFormValues,
 } from "@/lib/validations/tr-accounting"
 import type { Prisma } from "@prisma/client"
-import { executeAction, fromZodError, NotFoundError, ConflictError, type ActionResult } from "@/lib/errors"
+import { executeAction, fromZodError, type ActionResult } from "@/lib/errors"
 import { MODULE, PATHS } from "@/lib/constants"
 
 // ==================== CARİ HESAP ====================
@@ -43,7 +43,7 @@ export async function getCustomerAccounts(params?: PaginationParams) {
     return createPaginatedResult(data.map(mapFn), total, params)
 }
 
-export async function createCustomerAccount(customerId: string, data: CustomerAccountFormValues) : Promise<ActionResult<Prisma.CustomerAccountGetPayload<{}>>> {
+export async function createCustomerAccount(customerId: string, data: CustomerAccountFormValues) : Promise<ActionResult<Prisma.CustomerAccountGetPayload<Record<string, never>>>> {
     return executeAction(async () => {
     
         const user = await requireAuth()

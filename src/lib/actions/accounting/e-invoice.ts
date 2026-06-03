@@ -11,12 +11,14 @@ import {
     type EInvoiceFormValues,
 } from "@/lib/validations/tr-accounting"
 import { executeAction, fromZodError, NotFoundError, ConflictError, AppError, type ActionResult } from "@/lib/errors"
+import { assertEInvoiceTransition } from "@/lib/einvoice-state"
 import { MODULE, PATHS } from "@/lib/constants"
 
 // ==================== FAZ 3: KDV/STOPAJ/ENFLASYON HESAPLAMALARI ====================
 import {
     calculateTax as engineCalculateTax,
     calculateBatchTax,
+    type BatchTaxResult,
     type KdvRate,
     type TevkifatRatio,
     type StopajRate,
@@ -25,12 +27,11 @@ import {
 import {
     KDV_RATE_OPTIONS,
     TEVKIFAT_OPTIONS,
-    STOPAJ_OPTIONS,
+    type TaxCalculationResult,
 } from "@/lib/services/tax-engine-types"
 
 import {
     generateUblTrXml,
-    generateDespatchAdviceXml,
     generateGibUuid,
     type UblDocumentInput,
     type UblInvoiceLine,
@@ -38,24 +39,18 @@ import {
 
 import {
     renderInvoiceHtml,
-    convertHtmlToPlainText,
 } from "@/lib/services/xml-pdf-converter"
 
-import {
-    submitWithRetry,
-    classifyErrorFromMessage,
-    determineInvoiceStatus,
-} from "@/lib/services/retry-engine"
+
+
 
 import {
     GibSoapAdapter,
-    getGibEndpoint,
     type GibEnvironment,
     type GibDocumentType,
 } from "@/lib/services/gib-soap-adapter"
 
 import {
-    GibXmlSigner,
     computeDocumentHash,
 } from "@/lib/services/gib-signature"
 
@@ -63,13 +58,14 @@ import {
     generateBaForm,
     generateBsForm,
     generateBaBsXml,
+    type BaBsGenerationResult,
     type BaBsSourceDocument,
 } from "@/lib/services/ba-bs-engine"
 
-import { round } from "@/lib/utils"
 
 import {
     calculateRevaluation,
+    type RevaluationResult,
 } from "@/lib/services/inflation-engine"
 
 import {
@@ -91,7 +87,7 @@ export async function calculateTaxAction(
         tevkifatRatio?: TevkifatRatio
         stopajRate?: StopajRate
     }
-) : Promise<ActionResult<any>> {
+) : Promise<ActionResult<TaxCalculationResult>> {
     return executeAction(async () => {
     
         const user = await requireAuth()
@@ -121,7 +117,7 @@ export async function calculateBatchTaxAction(
         tevkifatRatio?: TevkifatRatio
         stopajRate?: StopajRate
     }>
-) : Promise<ActionResult<any>> {
+) : Promise<ActionResult<BatchTaxResult>> {
     return executeAction(async () => {
     
         await requireAuth()
@@ -139,7 +135,7 @@ export async function generateBaBsFormAction(
     formType: "BA" | "BS",
     year: number,
     month: number
-) : Promise<ActionResult<any>> {
+) : Promise<ActionResult<{ form: unknown; generationResult: BaBsGenerationResult }>> {
     return executeAction(async () => {
     
         const user = await requireAuth()
@@ -232,8 +228,8 @@ export async function generateBaBsFormAction(
 export async function revalueBalancesAction(
     year: number,
     month: number,
-    coefficient: number
-) : Promise<ActionResult<any>> {
+    _coefficient: number
+) : Promise<ActionResult<RevaluationResult>> {
     return executeAction(async () => {
     
         const user = await requireAuth()
@@ -419,7 +415,7 @@ export async function createEInvoice(data: EInvoiceFormValues) {
         : generateUblTrXml(ublInput)
 
     // HTML önizleme oluştur
-    const htmlContent = renderInvoiceHtml({
+    const _htmlContent = renderInvoiceHtml({
         documentType: parsed.data.documentType as "INVOICE" | "ARCHIVE",
         invoiceNumber,
         uuid,
@@ -496,9 +492,8 @@ export async function submitEInvoiceToGib(id: string) {
         throw new NotFoundError("e-Invoice")
     }
 
-    if (invoice.status !== "DRAFT" && invoice.status !== "ERROR") {
-        throw new ConflictError(`Cannot submit invoice with status ${invoice.status}`)
-    }
+    // Durum makinesi: yalnızca geçerli geçişlere izin ver (DRAFT/SIGNED/ERROR → SENDING).
+    assertEInvoiceTransition(invoice.status, "SENDING")
 
     // Önce durumu SENDING yap
     await db.eInvoice.update({
@@ -514,7 +509,9 @@ export async function submitEInvoiceToGib(id: string) {
     // İmza yapılandırması (mali mühür varsa)
     const certPath = process.env.GIB_CERT_PATH
     const certPassword = process.env.GIB_CERT_PASSWORD
-    let signerConfig = undefined
+    // NOTE: Mali mühür (P12) signing is not yet wired — see DOM-3 backlog.
+    // signerConfig stays undefined until certificate loading is implemented.
+    const signerConfig = undefined
 
     if (certPath && certPassword) {
         // Gerçek uygulamada: sertifikayı dosyadan oku
@@ -734,6 +731,8 @@ export async function cancelEInvoice(id: string) {
     if (invoice.status === "GIB_ACCEPTED") {
         throw new ConflictError("Cannot cancel an accepted invoice. It must be reversed with a credit note.")
     }
+    // Durum makinesi: zaten iptal edilmiş/terminal bir belge tekrar iptal edilemez.
+    assertEInvoiceTransition(invoice.status, "CANCELLED")
 
     const updated = await db.eInvoice.update({
         where: { id },

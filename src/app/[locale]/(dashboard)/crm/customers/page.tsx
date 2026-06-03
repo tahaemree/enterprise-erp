@@ -1,4 +1,5 @@
 import { Link } from "@/i18n/navigation"
+import { RoleGate } from "@/components/auth/role-gate"
 import { getTranslations } from "next-intl/server"
 import { Plus, Users, UserCheck, DollarSign, TrendingUp } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -6,8 +7,6 @@ import { CustomersTable } from "@/components/crm/customers-table"
 import { type Customer } from "@/components/crm/customer-columns"
 import { formatCurrency } from "@/lib/utils"
 import { getCustomers, getCustomerMetrics } from "@/lib/actions/customers"
-import { Suspense } from "react"
-import CustomersLoading from "./loading"
 
 interface PageProps {
     params: Promise<{ locale: string }>
@@ -32,7 +31,6 @@ export default async function CustomersPage(props: PageProps) {
     // Handle return type of getCustomers which might be an array if pagination params are null
     // But since we are explicitly passing page and pageSize, it will be PaginatedResult
     const customersData = "data" in paginatedCustomers ? paginatedCustomers.data : paginatedCustomers
-    const totalCount = "total" in paginatedCustomers ? paginatedCustomers.total : customersData.length
     const pageCount = "totalPages" in paginatedCustomers ? paginatedCustomers.totalPages : 1
 
     const customers: Customer[] = customersData.map((c) => ({
@@ -52,12 +50,14 @@ export default async function CustomersPage(props: PageProps) {
     return (
         <div className="space-y-6">
             <div className="flex justify-end">
+                <RoleGate allow="MANAGER">
                 <Button asChild>
                     <Link href="/crm/customers/new">
                         <Plus className="mr-2 h-4 w-4" />
                         {t("addCustomer")}
                     </Link>
                 </Button>
+                </RoleGate>
             </div>
 
             {/* Stats Cards */}

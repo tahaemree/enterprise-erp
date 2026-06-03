@@ -7,6 +7,16 @@ const IV_LENGTH = 16 // 128 bits
 const AUTH_TAG_LENGTH = 16 // 128 bits
 
 /**
+ * When ENCRYPTION_STRICT=true, decrypt() refuses to pass through unencrypted
+ * data. Operators enable this after backfilling legacy rows to permanently
+ * close the plaintext-fallback path (KVKK compliance). Read lazily so the flag
+ * can be toggled per-process without re-importing the module.
+ */
+function isStrictEncryption(): boolean {
+    return process.env.ENCRYPTION_STRICT === 'true'
+}
+
+/**
  * Derives a proper 256-bit key from the ENCRYPTION_KEY env variable.
  * Uses HKDF-like derivation via crypto.scryptSync for production-grade key derivation.
  *
@@ -90,8 +100,19 @@ export function encrypt(text: string | null | undefined): string | null {
 export function decrypt(encryptedText: string | null | undefined): string | null {
     if (encryptedText == null) return null
     if (!encryptedText.includes(':') || encryptedText.split(':').length !== 3) {
-        // Data not in encrypted format (e.g., legacy seed data, migration)
-        // Log warning and return as-is instead of throwing
+        // Data not in encrypted format (e.g., legacy seed data, migration).
+        //
+        // Backward-compat fallback returns the plaintext as-is. This is a KVKK
+        // risk because it lets unencrypted PII flow silently. After backfilling
+        // existing rows, operators set ENCRYPTION_STRICT=true to CLOSE this path
+        // so any remaining unencrypted value is treated as corruption, not data.
+        if (isStrictEncryption()) {
+            logger.error('Encountered unencrypted data while ENCRYPTION_STRICT is enabled', {
+                module: 'encryption',
+                hint: 'Backfill/encrypt legacy rows, or disable ENCRYPTION_STRICT to tolerate plaintext.',
+            })
+            throw new Error('Unencrypted data encountered while strict encryption is enabled')
+        }
         logger.warn('Data is not in encrypted format (expected iv:authTag:ciphertext), returning plaintext', {
             module: 'encryption',
             hint: 'This data was likely stored before encryption was enabled',

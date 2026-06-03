@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
                     const data = `data: ${JSON.stringify(payload)}\n\n`
                     try {
                         controller.enqueue(encoder.encode(data))
-                    } catch (e) {
+                    } catch (_e) {
                         sseEmitter.off("notification", listener)
                     }
                 }
@@ -40,7 +40,7 @@ export async function GET(req: NextRequest) {
             const pingInterval = setInterval(() => {
                 try {
                     controller.enqueue(encoder.encode(`: keep-alive\n\n`))
-                } catch (e) {
+                } catch (_e) {
                     cleanup()
                     clearInterval(pingInterval)
                 }

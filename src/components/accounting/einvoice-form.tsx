@@ -114,26 +114,20 @@ export function EInvoiceForm({ defaultType = "INVOICE" }: EInvoiceFormProps) {
                     </TabsList>
 
                     <TabsContent value="INVOICE" className="space-y-6 pt-4">
-                        <p className="text-sm text-muted-foreground">
-                            Standart e-Fatura (Ticari Fatura profili). GİB&apos;e gönderim için hazırlanır.
-                        </p>
+                        <p className="text-sm text-muted-foreground">{t("tabInvoiceDesc")}</p>
                     </TabsContent>
                     <TabsContent value="ARCHIVE" className="space-y-6 pt-4">
-                        <p className="text-sm text-muted-foreground">
-                            e-Arşiv Fatura. Alıcı e-posta adresi zorunludur. PDF olarak e-posta ile gönderilebilir.
-                        </p>
+                        <p className="text-sm text-muted-foreground">{t("tabArchiveDesc")}</p>
                     </TabsContent>
                     <TabsContent value="DESPATCH_ADVICE" className="space-y-6 pt-4">
-                        <p className="text-sm text-muted-foreground">
-                            e-İrsaliye (Sevk İrsaliyesi). Mal hareketleri için kullanılır.
-                        </p>
+                        <p className="text-sm text-muted-foreground">{t("tabDespatchDesc")}</p>
                     </TabsContent>
                 </Tabs>
 
                 <div className="space-y-4">
                     <h3 className="text-lg font-medium flex items-center gap-2">
                         <FileDigit className="h-5 w-5" />
-                        Receiver Information
+                        {t("receiverInfo")}
                     </h3>
                     <Separator />
 
@@ -143,9 +137,9 @@ export function EInvoiceForm({ defaultType = "INVOICE" }: EInvoiceFormProps) {
                             name="receiverName"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Receiver Name / Company</FormLabel>
+                                    <FormLabel>{t("receiverName")}</FormLabel>
                                     <FormControl>
-                                        <Input placeholder="Alıcı Adı / Ünvanı" {...field} />
+                                        <Input placeholder={t("receiverNamePlaceholder")} {...field} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -156,7 +150,7 @@ export function EInvoiceForm({ defaultType = "INVOICE" }: EInvoiceFormProps) {
                             name="receiverTaxId"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Receiver Tax ID (VKN/TCKN)</FormLabel>
+                                    <FormLabel>{t("receiverTaxId")}</FormLabel>
                                     <FormControl>
                                         <Input placeholder="1234567890" {...field} />
                                     </FormControl>
@@ -169,11 +163,11 @@ export function EInvoiceForm({ defaultType = "INVOICE" }: EInvoiceFormProps) {
                             name="receiverEmail"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Receiver Email (required for e-Arşiv)</FormLabel>
+                                    <FormLabel>{t("receiverEmail")}</FormLabel>
                                     <FormControl>
                                         <Input
                                             type="email"
-                                            placeholder="fatura@alici.com"
+                                            placeholder={t("receiverEmailPlaceholder")}
                                             {...field}
                                             value={field.value ?? ""}
                                         />
@@ -187,18 +181,18 @@ export function EInvoiceForm({ defaultType = "INVOICE" }: EInvoiceFormProps) {
                             name="profile"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Profile</FormLabel>
+                                    <FormLabel>{t("profile")}</FormLabel>
                                     <Select onValueChange={field.onChange} value={field.value}>
                                         <FormControl>
                                             <SelectTrigger>
-                                                <SelectValue placeholder="Select profile" />
+                                                <SelectValue placeholder={t("selectProfile")} />
                                             </SelectTrigger>
                                         </FormControl>
                                         <SelectContent>
-                                            <SelectItem value="TEMELFATURA">Temel Fatura</SelectItem>
-                                            <SelectItem value="TICARIFATURA">Ticari Fatura</SelectItem>
-                                            <SelectItem value="EARSIVFATURA">e-Arşiv Fatura</SelectItem>
-                                            <SelectItem value="IHRACAT">İhracat Faturası</SelectItem>
+                                            <SelectItem value="TEMELFATURA">{t("profileTemel")}</SelectItem>
+                                            <SelectItem value="TICARIFATURA">{t("profileTicari")}</SelectItem>
+                                            <SelectItem value="EARSIVFATURA">{t("profileEArsiv")}</SelectItem>
+                                            <SelectItem value="IHRACAT">{t("profileIhracat")}</SelectItem>
                                         </SelectContent>
                                     </Select>
                                     <FormMessage />
@@ -211,7 +205,7 @@ export function EInvoiceForm({ defaultType = "INVOICE" }: EInvoiceFormProps) {
                 <div className="space-y-4">
                     <h3 className="text-lg font-medium flex items-center gap-2">
                         <Calculator className="h-5 w-5" />
-                        Financial Details
+                        {t("financialDetails")}
                     </h3>
                     <Separator />
 
@@ -221,7 +215,7 @@ export function EInvoiceForm({ defaultType = "INVOICE" }: EInvoiceFormProps) {
                             name="grossTotal"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Gross Total (Brüt)</FormLabel>
+                                    <FormLabel>{t("grossTotal")}</FormLabel>
                                     <FormControl>
                                         <Input
                                             type="number"
@@ -244,7 +238,7 @@ export function EInvoiceForm({ defaultType = "INVOICE" }: EInvoiceFormProps) {
                             name="vatBaseTotal"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>VAT Base (KDV Matrahı)</FormLabel>
+                                    <FormLabel>{t("vatBase")}</FormLabel>
                                     <FormControl>
                                         <Input type="number" step="0.01" min="0" placeholder="0.00" {...field}
                                             onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)} />
@@ -258,7 +252,7 @@ export function EInvoiceForm({ defaultType = "INVOICE" }: EInvoiceFormProps) {
                             name="vatTotal"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>VAT Total (KDV)</FormLabel>
+                                    <FormLabel>{t("vatTotal")}</FormLabel>
                                     <FormControl>
                                         <Input type="number" step="0.01" min="0" placeholder="0.00" {...field}
                                             onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)} />
@@ -272,7 +266,7 @@ export function EInvoiceForm({ defaultType = "INVOICE" }: EInvoiceFormProps) {
                             name="netTotal"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Net Total</FormLabel>
+                                    <FormLabel>{t("netTotal")}</FormLabel>
                                     <FormControl>
                                         <Input type="number" step="0.01" min="0" placeholder="0.00" {...field}
                                             onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)} />
@@ -286,12 +280,12 @@ export function EInvoiceForm({ defaultType = "INVOICE" }: EInvoiceFormProps) {
                             name="withholdingTotal"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Withholding Total (Tevkifat)</FormLabel>
+                                    <FormLabel>{t("withholdingTotal")}</FormLabel>
                                     <FormControl>
                                         <Input type="number" step="0.01" min="0" placeholder="0.00" {...field}
                                             onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)} />
                                     </FormControl>
-                                    <FormDescription>Leave 0 if no withholding</FormDescription>
+                                    <FormDescription>{t("withholdingHint")}</FormDescription>
                                     <FormMessage />
                                 </FormItem>
                             )}
@@ -301,11 +295,11 @@ export function EInvoiceForm({ defaultType = "INVOICE" }: EInvoiceFormProps) {
                             name="currency"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Currency</FormLabel>
+                                    <FormLabel>{t("currency")}</FormLabel>
                                     <Select onValueChange={field.onChange} value={field.value}>
                                         <FormControl>
                                             <SelectTrigger>
-                                                <SelectValue placeholder="Select currency" />
+                                                <SelectValue placeholder={t("selectCurrency")} />
                                             </SelectTrigger>
                                         </FormControl>
                                         <SelectContent>
@@ -327,7 +321,7 @@ export function EInvoiceForm({ defaultType = "INVOICE" }: EInvoiceFormProps) {
                             name="issueDate"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Issue Date</FormLabel>
+                                    <FormLabel>{t("issueDate")}</FormLabel>
                                     <FormControl>
                                         <Input
                                             type="date"
@@ -345,7 +339,7 @@ export function EInvoiceForm({ defaultType = "INVOICE" }: EInvoiceFormProps) {
                             name="dueDate"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Due Date (optional)</FormLabel>
+                                    <FormLabel>{t("dueDate")}</FormLabel>
                                     <FormControl>
                                         <Input
                                             type="date"
@@ -363,7 +357,7 @@ export function EInvoiceForm({ defaultType = "INVOICE" }: EInvoiceFormProps) {
                             name="exchangeRate"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Exchange Rate (optional)</FormLabel>
+                                    <FormLabel>{t("exchangeRate")}</FormLabel>
                                     <FormControl>
                                         <Input
                                             type="number"
@@ -375,7 +369,7 @@ export function EInvoiceForm({ defaultType = "INVOICE" }: EInvoiceFormProps) {
                                             onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
                                         />
                                     </FormControl>
-                                    <FormDescription>Leave empty for TRY</FormDescription>
+                                    <FormDescription>{t("exchangeRateHint")}</FormDescription>
                                     <FormMessage />
                                 </FormItem>
                             )}
@@ -388,10 +382,10 @@ export function EInvoiceForm({ defaultType = "INVOICE" }: EInvoiceFormProps) {
                     name="notes"
                     render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Notes (optional)</FormLabel>
+                            <FormLabel>{t("notes")}</FormLabel>
                             <FormControl>
                                 <Textarea
-                                    placeholder="Invoice notes, special conditions..."
+                                    placeholder={t("notesPlaceholder")}
                                     className="min-h-[80px]"
                                     {...field}
                                 />

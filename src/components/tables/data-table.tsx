@@ -20,7 +20,6 @@ import {
     ChevronsRight,
     Download,
     FolderOpen,
-    Inbox,
     Plus,
     Search,
     Settings2,
@@ -90,17 +89,17 @@ export function DataTable<TData, TValue>({
     columns,
     data,
     searchKey,
-    searchPlaceholder = "Ara...",
+    searchPlaceholder,
     toolbar,
-    viewText = "Görüntüle",
-    toggleColumnsText = "Sütunları göster/gizle",
-    noResultsText = "Sonuç bulunamadı.",
-    rowsPerPageText = "Sayfa başına satır",
-    pageText = "Sayfa",
-    ofText = "/",
-    rowSelectedText = "satır seçili.",
-    showingText = "Gösterilen",
-    selectedText = "seçili.",
+    viewText,
+    toggleColumnsText,
+    noResultsText,
+    rowsPerPageText,
+    pageText,
+    ofText,
+    rowSelectedText,
+    showingText,
+    selectedText,
     pageCount,
     manualPagination,
     manualFiltering,
@@ -112,6 +111,8 @@ export function DataTable<TData, TValue>({
     onCreateClick,
     bulkActions,
 }: DataTableProps<TData, TValue>) {
+    "use no memo"
+
     const [sorting, setSorting] = React.useState<SortingState>([])
     const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
     const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
@@ -119,6 +120,23 @@ export function DataTable<TData, TValue>({
     const [globalFilter, setGlobalFilter] = React.useState("")
     const t = useTranslations()
 
+    // Localized labels — props win when provided, otherwise fall back to i18n.
+    // (Previously these defaulted to hard-coded Turkish strings, which leaked
+    // Turkish text into the en/de/ar locales.)
+    const L = {
+        search: searchPlaceholder ?? t("dataTable.search"),
+        view: viewText ?? t("dataTable.view"),
+        toggleColumns: toggleColumnsText ?? t("dataTable.toggleColumns"),
+        noResults: noResultsText ?? t("dataTable.noResults"),
+        rowsPerPage: rowsPerPageText ?? t("dataTable.rowsPerPage"),
+        page: pageText ?? t("dataTable.page"),
+        of: ofText ?? t("dataTable.of"),
+        rowSelected: rowSelectedText ?? t("dataTable.results"),
+        showing: showingText ?? t("dataTable.showing"),
+        selected: selectedText ?? t("dataTable.selected"),
+    }
+
+    // eslint-disable-next-line react-hooks/incompatible-library -- TanStack Table uses interior mutability; this wrapper is opted out with "use no memo".
     const table = useReactTable({
         data,
         columns,
@@ -153,7 +171,7 @@ export function DataTable<TData, TValue>({
                     <div className="relative flex-1 sm:max-w-xs">
                         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                         <Input
-                            placeholder={searchPlaceholder}
+                            placeholder={L.search}
                             value={searchKey
                                 ? (table.getColumn(searchKey)?.getFilterValue() as string) ?? ""
                                 : globalFilter
@@ -177,6 +195,7 @@ export function DataTable<TData, TValue>({
                                 <Button
                                     variant="ghost"
                                     size="icon"
+                                    aria-label={t("dataTable.clearSearch")}
                                     className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2"
                                     onClick={() => {
                                         if (manualFiltering && onSearchChange) {
@@ -210,7 +229,7 @@ export function DataTable<TData, TValue>({
                             const csvContent = [
                                 keys.join(','),
                                 ...dataToExport.map(row => keys.map(k => {
-                                    const val = (row as any)[k]
+                                    const val = (row as Record<string, unknown>)[k]
                                     if (val === null || val === undefined) return '""'
                                     if (typeof val === 'object') return `"${JSON.stringify(val).replace(/"/g, '""')}"`
                                     return `"${String(val).replace(/"/g, '""')}"`
@@ -224,7 +243,7 @@ export function DataTable<TData, TValue>({
                         }}
                     >
                         <Download className="mr-2 h-4 w-4" />
-                        Dışa Aktar
+                        {t("dataTable.export")}
                     </Button>
 
                     {/* Column visibility */}
@@ -232,11 +251,11 @@ export function DataTable<TData, TValue>({
                         <DropdownMenuTrigger asChild>
                             <Button variant="outline" size="sm">
                                 <Settings2 className="mr-2 h-4 w-4" />
-                                {viewText}
+                                {L.view}
                             </Button>
                         </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-[150px]">
-                        <DropdownMenuLabel>{toggleColumnsText}</DropdownMenuLabel>
+                        <DropdownMenuLabel>{L.toggleColumns}</DropdownMenuLabel>
                         <DropdownMenuSeparator />
                         {table
                             .getAllColumns()
@@ -283,7 +302,7 @@ export function DataTable<TData, TValue>({
                     </TableHeader>
                     <TableBody>
                         {table.getRowModel().rows?.length ? (
-                            table.getRowModel().rows.map((row, index) => (
+                            table.getRowModel().rows.map((row) => (
                                 <TableRow
                                     key={row.id}
                                     data-state={row.getIsSelected() && "selected"}
@@ -319,7 +338,7 @@ export function DataTable<TData, TValue>({
                                                         <Search className="h-6 w-6 text-muted-foreground" />
                                                     </div>
                                                     <p className="text-sm text-muted-foreground font-medium">
-                                                        {noResultsText}
+                                                        {L.noResults}
                                                     </p>
                                                 </div>
                                             )
@@ -336,9 +355,9 @@ export function DataTable<TData, TValue>({
                                                     <FolderOpen className="h-10 w-10 text-primary" strokeWidth={1.5} />
                                                 </div>
                                                 <div className="text-center space-y-1.5 max-w-sm">
-                                                    <h3 className="text-lg font-semibold tracking-tight">Kayıt Bulunamadı</h3>
+                                                    <h3 className="text-lg font-semibold tracking-tight">{t("dataTable.emptyTitle")}</h3>
                                                     <p className="text-sm text-muted-foreground leading-relaxed">
-                                                        {noResultsText} {createLabel ? "Yeni bir kayıt oluşturarak hemen başlayabilirsiniz." : "Arama kriterlerinizi değiştirerek tekrar deneyebilirsiniz."}
+                                                        {createLabel ? t("dataTable.emptyHintCreate") : t("dataTable.emptyHintSearch")}
                                                     </p>
                                                 </div>
                                                 {createLabel && onCreateClick && (
@@ -367,20 +386,20 @@ export function DataTable<TData, TValue>({
                 <div className="text-sm text-muted-foreground">
                     {table.getFilteredSelectedRowModel().rows.length > 0 && (
                         <span>
-                            {table.getFilteredSelectedRowModel().rows.length} {ofText}{" "}
-                            {table.getFilteredRowModel().rows.length} {selectedText}
+                            {table.getFilteredSelectedRowModel().rows.length} {L.of}{" "}
+                            {table.getFilteredRowModel().rows.length} {L.selected}
                         </span>
                     )}
                     {table.getFilteredSelectedRowModel().rows.length === 0 && (
                         <span>
-                            {showingText} {table.getRowModel().rows.length} {ofText}{" "}
-                            {table.getFilteredRowModel().rows.length} {rowSelectedText}
+                            {L.showing} {table.getRowModel().rows.length} {L.of}{" "}
+                            {table.getFilteredRowModel().rows.length} {L.rowSelected}
                         </span>
                     )}
                 </div>
                 <div className="flex items-center gap-4">
                     <div className="flex items-center gap-2">
-                        <p className="text-sm font-medium">{rowsPerPageText}</p>
+                        <p className="text-sm font-medium">{L.rowsPerPage}</p>
                         <Select
                             value={`${table.getState().pagination.pageSize}`}
                             onValueChange={(value) => {
@@ -409,7 +428,7 @@ export function DataTable<TData, TValue>({
                     </div>
                     <div className="flex items-center gap-1">
                         <span className="text-sm font-medium">
-                            {pageText} {table.getState().pagination.pageIndex + 1} {ofText}{" "}
+                            {L.page} {table.getState().pagination.pageIndex + 1} {L.of}{" "}
                             {table.getPageCount()}
                         </span>
                     </div>
@@ -417,6 +436,7 @@ export function DataTable<TData, TValue>({
                         <Button
                             variant="outline"
                             size="icon"
+                            aria-label={t("dataTable.firstPage")}
                             className="h-8 w-8"
                             onClick={() => {
                                 if (manualPagination && onPaginationChange) {
@@ -432,6 +452,7 @@ export function DataTable<TData, TValue>({
                         <Button
                             variant="outline"
                             size="icon"
+                            aria-label={t("dataTable.prevPage")}
                             className="h-8 w-8"
                             onClick={() => {
                                 if (manualPagination && onPaginationChange) {
@@ -447,6 +468,7 @@ export function DataTable<TData, TValue>({
                         <Button
                             variant="outline"
                             size="icon"
+                            aria-label={t("dataTable.nextPage")}
                             className="h-8 w-8"
                             onClick={() => {
                                 if (manualPagination && onPaginationChange) {
@@ -462,6 +484,7 @@ export function DataTable<TData, TValue>({
                         <Button
                             variant="outline"
                             size="icon"
+                            aria-label={t("dataTable.lastPage")}
                             className="h-8 w-8"
                             onClick={() => {
                                 if (manualPagination && onPaginationChange) {
@@ -483,8 +506,8 @@ export function DataTable<TData, TValue>({
                 <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-5 fade-in duration-300">
                     <div className="flex items-center gap-4 rounded-full border border-primary/20 bg-background/80 backdrop-blur-xl px-6 py-3 shadow-2xl shadow-primary/10">
                         <span className="text-sm font-medium">
-                            <span className="text-primary font-bold text-base mr-1">{table.getFilteredSelectedRowModel().rows.length}</span> 
-                            {selectedText}
+                            <span className="text-primary font-bold text-base mr-1">{table.getFilteredSelectedRowModel().rows.length}</span>
+                            {L.selected}
                         </span>
                         <div className="h-5 w-px bg-border/50 mx-2" />
                         <div className="flex items-center gap-2">
@@ -494,7 +517,8 @@ export function DataTable<TData, TValue>({
                                 size="icon" 
                                 className="rounded-full h-8 w-8 ml-2 hover:bg-destructive/10 hover:text-destructive" 
                                 onClick={() => table.toggleAllRowsSelected(false)}
-                                title="Seçimi İptal Et"
+                                title={t("dataTable.clearSelection")}
+                                aria-label={t("dataTable.clearSelection")}
                             >
                                 <X className="h-4 w-4" />
                             </Button>

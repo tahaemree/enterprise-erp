@@ -19,7 +19,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     '/accounting/e-invoice',
   ]
 
-  const locales = ['tr', 'en']
   const sitemapData: MetadataRoute.Sitemap = []
 
   for (const route of routes) {

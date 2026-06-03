@@ -32,8 +32,6 @@ import {
     BarChart3,
     ScrollText,
     Menu,
-    LogOut,
-    ChevronRight,
     UserCircle,
     Activity
 } from "lucide-react"
@@ -185,7 +183,6 @@ const navGroups: NavGroup[] = [
 export function Sidebar() {
     const pathname = usePathname()
     const t = useTranslations("sidebar")
-    const tCommon = useTranslations("common")
     
     const [hoveredGroup, setHoveredGroup] = useState<string | null>(null)
     const [flyoutPosition, setFlyoutPosition] = useState(0)
@@ -359,10 +356,9 @@ function FlyoutMenu({
     // Determine if this group has submenus
     const hasItems = group.items && group.items.length > 0
     const hasSubGroups = group.subGroups && group.subGroups.length > 0
-    
-    // Do not show flyout if it's just a direct link with no children
-    if (!hasItems && !hasSubGroups) return null
 
+    // Hooks MUST run unconditionally and in the same order on every render.
+    // The "no children" early-return therefore happens AFTER all hooks below.
     const menuRef = useRef<HTMLDivElement>(null)
     const [actualTop, setActualTop] = useState<number | null>(null)
 
@@ -381,6 +377,9 @@ function FlyoutMenu({
             setActualTop(clampedTop)
         }
     }, [position, group.id])
+
+    // Do not show flyout if it's just a direct link with no children.
+    if (!hasItems && !hasSubGroups) return null
 
     return (
         <motion.div
@@ -467,18 +466,14 @@ function FlyoutLink({ item, pathname, t }: { item: NavItem, pathname: string, t:
 // ─── Mobile Sidebar (Sheet-based) ─────────────────────────────────────
 
 export function MobileSidebar() {
-    const [open, setOpen] = useState(false)
+    const [openPath, setOpenPath] = useState<string | null>(null)
     const tCommon = useTranslations("common")
     const t = useTranslations("sidebar")
     const pathname = usePathname()
-
-    // Close on navigation
-    useEffect(() => {
-        setOpen(false)
-    }, [pathname])
+    const open = openPath === pathname
 
     return (
-        <Sheet open={open} onOpenChange={setOpen}>
+        <Sheet open={open} onOpenChange={(nextOpen) => setOpenPath(nextOpen ? pathname : null)}>
             <SheetTrigger asChild>
                 <Button variant="ghost" size="icon" className="md:hidden shrink-0 relative z-50">
                     <Menu className="h-5 w-5" />
