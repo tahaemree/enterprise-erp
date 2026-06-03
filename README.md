@@ -9,7 +9,7 @@
 
 ## 📋 Overview
 
-Enterprise ERP is a modern, cloud-native Enterprise Resource Planning system tailored for B2B SaaS operations. Built on a robust Next.js 15 App Router architecture, it delivers real-time business intelligence, automated accounting workflows, and secure multi-tenant data isolation.
+Enterprise ERP is a modern, cloud-native Enterprise Resource Planning system tailored for B2B SaaS operations. Built on a robust Next.js 16 App Router architecture, it delivers real-time business intelligence, automated accounting workflows, and secure multi-tenant data isolation.
 
 This platform bridges the gap between modern web experiences and strict enterprise compliance, featuring direct integrations with government tax services and end-to-end data encryption.
 
@@ -17,7 +17,7 @@ This platform bridges the gap between modern web experiences and strict enterpri
 
 ## ⚡ Core Capabilities
 
-- **🔐 Multi-Tenant Architecture:** Cryptographically isolated workspaces using Row-Level Security (RLS) patterns and tenant-specific data partitioning.
+- **🔐 Multi-Tenant Architecture:** Strict tenant isolation enforced in the data-access layer via a Prisma client extension that injects the tenant ID into every query and create, backed by defense-in-depth post-query checks.
 - **💰 Advanced Accounting Engine:** Automated processing for VAT, Withholding Taxes, and complex ledger reconciliations.
 - **🏛️ E-Invoice Integration:** Direct, real-time SOAP integration with the Revenue Administration (GIB) for legal compliance.
 - **📦 Inventory Management:** Real-time stock tracking with asynchronous low-stock alerting via Redis queues.
@@ -122,6 +122,6 @@ We welcome contributions from the enterprise engineering community! Please revie
 
 ## 📄 License
 
-This software is strictly for **educational and portfolio demonstration purposes**. It is licensed under a custom **Non-Commercial License** (All Rights Reserved).
+This software is open-sourced under the **MIT License**.
 
-You are **NOT authorized** to use, sell, or distribute this software for any commercial purposes without explicit prior written permission. Please see the [LICENSE](LICENSE) file for complete details.
+You are free to use, modify, and distribute this software, provided that the original copyright and permission notice are included. Please see the [LICENSE](LICENSE) file for complete details.
